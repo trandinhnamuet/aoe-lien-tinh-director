@@ -112,6 +112,18 @@ export async function setSetting(key: string, value: unknown): Promise<Result> {
 export interface PlayerInput {
   full_name: string; phone: string; aoe_nickname?: string; birth_date?: string;
   citizen_id?: string; address?: string; facebook_url?: string;
+  row?: number; // source Excel row number, for error reporting
+}
+export interface ImportIssue { row: number; name: string; reason: string }
+
+/** Turn a raw DB/postgres error into a clear Vietnamese reason for the admin. */
+function friendlyDbError(e: unknown): string {
+  const m = e instanceof Error ? e.message : String(e);
+  if (/invalid input syntax for type date/i.test(m)) return "Ngày sinh sai định dạng (dùng dd-mm-yyyy, vd 20-05-1990)";
+  if (/value too long/i.test(m)) return "Một trường dữ liệu quá dài so với giới hạn";
+  if (/null value in column "(\w+)"/i.test(m)) return `Thiếu dữ liệu bắt buộc (${m.match(/null value in column "(\w+)"/i)![1]})`;
+  if (/duplicate key|unique constraint/i.test(m)) return "Trùng dữ liệu (vi phạm khóa duy nhất)";
+  return m;
 }
 async function checkCccd(): Promise<boolean> {
   const r = await sql<{ value: unknown }[]>`select value from aoe.app_settings where key='check_duplicate_cccd'`;
@@ -136,25 +148,35 @@ export async function addPlayer(clusterId: string, p: PlayerInput): Promise<Resu
   } catch (e) { return fail(msg(e)); }
 }
 
-export async function importPlayers(clusterId: string, rows: PlayerInput[]): Promise<Result<{ inserted: number; skipped: number }>> {
+export async function importPlayers(clusterId: string, rows: PlayerInput[]): Promise<Result<{ inserted: number; skipped: number; errors: ImportIssue[] }>> {
   try {
     await requireAdmin();
     const check = await checkCccd();
-    let inserted = 0, skipped = 0;
-    await sql.begin(async (tx) => {
-      for (const p of rows) {
-        if (!p.full_name?.trim() || !p.phone?.trim()) { skipped++; continue; }
-        if (check && p.citizen_id?.trim()) {
-          const dup = await tx`select 1 from aoe.players where cluster_id=${clusterId} and citizen_id=${p.citizen_id.trim()}`;
-          if (dup.length) { skipped++; continue; }
+    let inserted = 0;
+    const errors: ImportIssue[] = [];
+    // Per-row inserts (not one big transaction) so valid rows still import and
+    // every failed row gets a specific, human-readable reason.
+    for (const p of rows) {
+      const rowNo = p.row ?? 0;
+      const label = p.full_name?.trim() || p.phone?.toString().trim() || `Dòng ${rowNo}`;
+      if (!p.full_name?.trim()) { errors.push({ row: rowNo, name: label, reason: "Thiếu Họ tên (cột A)" }); continue; }
+      if (!p.phone?.toString().trim()) { errors.push({ row: rowNo, name: label, reason: "Thiếu Số điện thoại (cột B)" }); continue; }
+      try {
+        const cccd = p.citizen_id?.toString().trim() || null;
+        if (check && cccd) {
+          const dup = await sql`select 1 from aoe.players where cluster_id=${clusterId} and citizen_id=${cccd}`;
+          if (dup.length) { errors.push({ row: rowNo, name: label, reason: `CCCD "${cccd}" đã tồn tại trong cụm này` }); continue; }
         }
-        await tx`insert into aoe.players (cluster_id, full_name, phone, aoe_nickname, birth_date, citizen_id, address, facebook_url)
+        await sql`insert into aoe.players (cluster_id, full_name, phone, aoe_nickname, birth_date, citizen_id, address, facebook_url)
           values (${clusterId}, ${p.full_name.trim()}, ${String(p.phone).trim()}, ${p.aoe_nickname?.trim() || null},
-            ${p.birth_date || null}, ${p.citizen_id?.toString().trim() || null}, ${p.address?.trim() || null}, ${p.facebook_url?.trim() || null})`;
+            ${p.birth_date || null}, ${cccd}, ${p.address?.trim() || null}, ${p.facebook_url?.trim() || null})`;
         inserted++;
+      } catch (e) {
+        errors.push({ row: rowNo, name: label, reason: friendlyDbError(e) });
       }
-    });
-    refresh(); return { ok: true, inserted, skipped };
+    }
+    refresh();
+    return { ok: true, inserted, skipped: errors.length, errors };
   } catch (e) { return fail(msg(e)); }
 }
 
