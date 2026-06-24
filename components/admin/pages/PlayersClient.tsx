@@ -74,7 +74,7 @@ export default function PlayersClient({ tournaments, tournamentId, clusters, clu
           <Field label="Họ tên *"><Input value={f.full_name} onChange={set("full_name")} placeholder="Nguyễn Văn A" /></Field>
           <Field label="SĐT *"><Input value={f.phone} onChange={set("phone")} placeholder="09xxxxxxxx" /></Field>
           <Field label="Nickname AoE"><Input value={f.aoe_nickname} onChange={set("aoe_nickname")} /></Field>
-          <Field label="Ngày sinh" hint="Tự do: 1990, 05-1990, 20-05-1990…"><Input value={f.birth_date} onChange={set("birth_date")} placeholder="vd 20-05-1990 / 1990" /></Field>
+          <Field label="Ngày sinh"><Input value={f.birth_date} onChange={set("birth_date")} placeholder="vd 20-05-1990 / 1990" /></Field>
           <Field label="CCCD"><Input value={f.citizen_id} onChange={set("citizen_id")} /></Field>
           <Field label="Địa chỉ"><Input value={f.address} onChange={set("address")} /></Field>
           <Field label="Facebook"><Input value={f.facebook_url} onChange={set("facebook_url")} /></Field>
