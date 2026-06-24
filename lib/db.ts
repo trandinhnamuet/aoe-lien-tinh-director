@@ -8,8 +8,14 @@ const globalForDb = globalThis as unknown as { _aoeSql?: ReturnType<typeof postg
 function create() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not set");
+  // Local Postgres (server deploy) has no TLS; remote (Supabase pooler) requires it.
+  // Override with DATABASE_SSL=require|false if auto-detection is ever wrong.
+  const local = /@(localhost|127\.0\.0\.1|\[::1\])[:/]/.test(url);
+  const ssl = process.env.DATABASE_SSL === "false" ? false
+    : process.env.DATABASE_SSL === "require" ? "require"
+    : local ? false : "require";
   return postgres(url, {
-    ssl: "require",
+    ssl,
     prepare: false, // Supabase pooler (Supavisor) friendly
     max: 5,
     idle_timeout: 20,

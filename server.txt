@@ -1,0 +1,1 @@
+ssh -i "C:\Users\Admin\.ssh\ics-server\ics-prod-server-ssh-key.key" ubuntu@161.118.203.249

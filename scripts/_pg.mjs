@@ -28,8 +28,9 @@ if (!url) {
   process.exit(1);
 }
 
+const local = /@(localhost|127\.0\.0\.1|\[::1\])[:/]/.test(url);
 export const sql = postgres(url, {
-  ssl: "require",
+  ssl: process.env.DATABASE_SSL === "false" ? false : local ? false : "require",
   prepare: false,
   max: 1,
   connect_timeout: 20,
