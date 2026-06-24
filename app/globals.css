@@ -1,26 +1,68 @@
-@import "tailwindcss";
+/* AoE Liên Tỉnh Director — global reset, scrollbar, keyframes.
+   Visual styling lives inline per the design system (Official Key Art). */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { background: #080b1e; }
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #080b1e;
+  color: #f0f4ff;
+  font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #2c3470; border-radius: 6px; }
+::-webkit-scrollbar-track { background: #0a0e24; }
+
+button { font-family: inherit; }
+a { color: inherit; }
+
+/* Native dropdowns: keep option list dark so light text stays readable. */
+select { color: #f0f4ff; }
+option { background-color: #0e1336; color: #f0f4ff; }
+
+@keyframes cardIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes growX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes pulseIce {
+  0%,100% { box-shadow: inset 0 0 0 1.5px #5db6ff, 0 0 18px rgba(93,182,255,.22); }
+  50%     { box-shadow: inset 0 0 0 1.5px #7fd0ff, 0 0 38px rgba(93,182,255,.55); }
+}
+@keyframes liveDot { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+@keyframes lightning { 0%,93%,100% { opacity: 0; } 94% { opacity: .5; } 95% { opacity: .1; } 96% { opacity: .6; } 98% { opacity: 0; } }
+@keyframes scoreFlash { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.04); } }
+@keyframes drawLine { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes slideInWin { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
+@keyframes confettiFall { to { transform: translateY(420px) rotate(640deg); opacity: 0; } }
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes shuffle { 0% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } 100% { transform: translateX(0); } }
+@keyframes spinSlow { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; }
+}
+
+/* ---- Admin single-elim bracket preview (columns + elbow connectors) ---- */
+.bkp { display: flex; align-items: stretch; width: 100%; }
+.bkp-round { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; padding-right: 40px; }
+.bkp-round:last-child { padding-right: 0; }
+.bkp-title { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 1px; color: #9aaad8; text-align: center; margin-bottom: 12px; }
+.bkp-title.final { color: #9bd8ff; }
+.bkp-body { flex: 1; display: flex; flex-direction: column; }
+/* grow to fill the (stretched) round height but never shrink below content,
+   so the first round defines the height and later rounds space out to match */
+.bkp-match { position: relative; flex: 1 0 auto; display: flex; flex-direction: column; justify-content: center; padding: 7px 0; }
+.bkp-card { width: 100%; background: rgba(255,255,255,.04); border: 1px solid rgba(93,182,255,.18); border-radius: 10px; padding: 11px 13px; }
+.bkp-card.final { border-color: rgba(93,182,255,.5); box-shadow: inset 0 0 0 1px rgba(93,182,255,.22); }
+
+/* elbow: horizontal stub at each match centre + vertical line joining the pair */
+.bkp-round:not(:last-child) .bkp-match::after {
+  content: ''; position: absolute; left: 100%; width: 40px; box-sizing: border-box;
+  border-right: 2px solid rgba(93,182,255,.4);
+}
+.bkp-round:not(:last-child) .bkp-match:nth-child(odd)::after {
+  top: 50%; bottom: 0; border-top: 2px solid rgba(93,182,255,.4);
+}
+.bkp-round:not(:last-child) .bkp-match:nth-child(even)::after {
+  top: 0; bottom: 50%; border-bottom: 2px solid rgba(93,182,255,.4);
 }
