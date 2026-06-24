@@ -1,4 +1,5 @@
 import "server-only";
+import { cookies } from "next/headers";
 import { sql } from "./db";
 import type { Cluster, Player, Round, ClusterStatus, RoundType, MatchStatus } from "./types";
 
@@ -111,12 +112,22 @@ export async function getRound(roundId: string): Promise<Round | null> {
   return rows[0] ?? null;
 }
 
-/** Resolve the tournament+cluster scope for admin pages from URL params + settings. */
+/** Resolve the tournament+cluster scope for admin pages.
+ *  Priority: URL params → `aoe_scope` cookie (last picked) → app settings → first available.
+ *  The cookie makes the picked cluster persist across all admin screens. */
 export async function resolveScope(sp: { tournament?: string; cluster?: string }) {
-  const [tournaments, settings] = await Promise.all([listTournaments(), getSettings()]);
-  const tournamentId = sp.tournament ?? settings.current_tournament_id ?? tournaments[0]?.id ?? null;
+  const [tournaments, settings, jar] = await Promise.all([listTournaments(), getSettings(), cookies()]);
+  const [ckTour, ckCluster] = (jar.get("aoe_scope")?.value ?? "").split("|");
+
+  const tournamentId =
+    sp.tournament ??
+    (ckTour && tournaments.some((t) => t.id === ckTour) ? ckTour : undefined) ??
+    settings.current_tournament_id ?? tournaments[0]?.id ?? null;
   const clusters = tournamentId ? await listClusters(tournamentId) : [];
+
   let clusterId = sp.cluster && clusters.some((c) => c.id === sp.cluster) ? sp.cluster : undefined;
+  // Only honour the cookie cluster when the tournament wasn't explicitly switched via URL.
+  if (!clusterId && !sp.tournament && ckCluster && clusters.some((c) => c.id === ckCluster)) clusterId = ckCluster;
   if (!clusterId) {
     if (settings.current_cluster_id && clusters.some((c) => c.id === settings.current_cluster_id)) clusterId = settings.current_cluster_id;
     else clusterId = clusters[0]?.id;

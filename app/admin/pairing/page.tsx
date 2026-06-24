@@ -51,7 +51,31 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ t
   if (!clusterId) return <NoCluster />;
 
   const [rounds, players] = await Promise.all([listRounds(clusterId), listPlayers(clusterId)]);
-  const roundId = sp.round && rounds.some((r) => r.id === sp.round) ? sp.round : rounds[0]?.id;
+
+  // Default the round dropdown to the next round that still needs work: the first
+  // round (by order) that isn't finished. A round is "finished" when it has matches,
+  // all are done, and (swiss) enough legs have been played. So once a round is done,
+  // the page auto-advances to the next one to pair.
+  const comp = await sql<{ round_id: string; total: number; done: number; legs: number }[]>`
+    select r.id as round_id, count(m.id)::int as total,
+      count(m.id) filter (where m.status = 'done')::int as done,
+      count(distinct m.leg_id)::int as legs
+    from aoe.rounds r left join aoe.matches m on m.round_id = r.id
+    where r.cluster_id = ${clusterId} group by r.id`;
+  const compMap = new Map(comp.map((c) => [c.round_id, c]));
+  const sortedRounds = [...rounds].sort((a, b) => a.order_no - b.order_no);
+  const finished = (r: Round): boolean => {
+    const c = compMap.get(r.id);
+    if (!c || c.total === 0 || c.done !== c.total) return false;
+    if (r.round_type === "swiss") {
+      const wins = Number((r.config as Record<string, number>)?.wins_to_advance ?? 2);
+      if (c.legs < 2 * wins - 1) return false;
+    }
+    return true;
+  };
+  const defaultRound = sortedRounds.find((r) => !finished(r)) ?? sortedRounds[sortedRounds.length - 1];
+
+  const roundId = sp.round && rounds.some((r) => r.id === sp.round) ? sp.round : defaultRound?.id;
   const roundRow = roundId ? await getRound(roundId) : null;
 
   let participantIds: string[] = [];
