@@ -1,5 +1,11 @@
 import "server-only";
+import dns from "node:dns";
 import postgres from "postgres";
+
+// Supabase's shared pooler (V2) now advertises IPv6; Node defaults to preferring
+// it, and on IPv4-only networks that makes connections hang until CONNECT_TIMEOUT.
+// Force IPv4 first so the pooler is reachable everywhere.
+dns.setDefaultResultOrder("ipv4first");
 
 // Single postgres client for the Next.js server. All queries qualify
 // tables with the `aoe.` schema, so no search_path juggling is needed.

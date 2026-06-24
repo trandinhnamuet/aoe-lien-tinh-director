@@ -1,9 +1,14 @@
 // Shared connection helper for migration/seed scripts.
 // Loads env from .env.local (Node scripts don't auto-load it) and prefers
 // DIRECT_URL (session-mode pooler / direct) for DDL — falling back to DATABASE_URL.
+import dns from "node:dns";
 import fs from "node:fs";
 import path from "node:path";
 import postgres from "postgres";
+
+// Prefer IPv4 — Supabase pooler V2 advertises IPv6 that IPv4-only networks
+// can't route, which otherwise hangs connections until CONNECT_TIMEOUT.
+dns.setDefaultResultOrder("ipv4first");
 
 function loadEnv() {
   const envPath = path.join(process.cwd(), ".env.local");
