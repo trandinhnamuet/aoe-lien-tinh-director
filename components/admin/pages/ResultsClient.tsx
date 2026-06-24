@@ -2,7 +2,6 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { updateResult } from "@/lib/actions";
 import { effectiveBestOf } from "@/lib/pairing";
 import type { ClusterWithMeta, AdminMatch, TournamentWithCount } from "@/lib/admin-queries";
 import type { MatchStatus, Round } from "@/lib/types";
@@ -200,9 +199,19 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
 
   async function doSave(score1: number, score2: number, st: MatchStatus) {
     setBusy(true);
-    const r = await updateResult(m.id, score1, score2, st, m1 === "" ? null : +m1, m2 === "" ? null : +m2);
-    setBusy(false);
-    if (r.ok) { setStatus(r.status); onSaved(m.id, r.status); } else onError(r.error);
+    try {
+      const res = await fetch("/api/admin/results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matchId: m.id, s1: score1, s2: score2, status: st, m1: m1 === "" ? null : +m1, m2: m2 === "" ? null : +m2 }),
+      });
+      const r = await res.json();
+      if (r.ok) { setStatus(r.status); onSaved(m.id, r.status); } else onError(r.error || "Lỗi lưu");
+    } catch {
+      onError("Lỗi mạng khi lưu");
+    } finally {
+      setBusy(false);
+    }
   }
 
   function schedSave(score1: number, score2: number, st: MatchStatus) {
