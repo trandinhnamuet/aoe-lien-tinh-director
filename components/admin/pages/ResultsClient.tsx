@@ -220,7 +220,7 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
   }
 
   function incS1() {
-    if (s1 >= bestOf) return;
+    if (s1 >= bestOf || s2 >= bestOf) return;
     const v = s1 + 1; const st = autoStatus(v, s2);
     setS1(v); setStatus(st); schedSave(v, s2, st);
   }
@@ -230,7 +230,7 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
     setS1(v); setStatus(st); schedSave(v, s2, st);
   }
   function incS2() {
-    if (s2 >= bestOf) return;
+    if (s2 >= bestOf || s1 >= bestOf) return;
     const v = s2 + 1; const st = autoStatus(s1, v);
     setS2(v); setStatus(st); schedSave(s1, v, st);
   }
@@ -242,18 +242,21 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
 
   const live = status === "live", done = status === "done";
   const border = live ? "1px solid rgba(93,182,255,.45)" : done ? "1px solid #242c64" : "1px dashed #2c3470";
+  // Once either side reaches the cap the match is decided — lock BOTH + buttons
+  // so a misclick can't push it to e.g. 2–2 with no clear winner.
+  const decided = s1 >= bestOf || s2 >= bestOf;
 
-  const stepper = (v: number, dec: () => void, inc: () => void, atCap: boolean) => (
+  const stepper = (v: number, dec: () => void, inc: () => void) => (
     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
       <button onClick={dec} disabled={v <= 0} style={stepBtnStyle(v <= 0)}>−</button>
-      <span style={{ fontFamily: FONT_SAIRA, fontStyle: "italic", fontWeight: 800, fontSize: 22, minWidth: 22, textAlign: "center", color: atCap ? "#5db6ff" : undefined }}>{v}</span>
-      <button onClick={inc} disabled={v >= bestOf} style={stepBtnStyle(v >= bestOf)}>+</button>
+      <span style={{ fontFamily: FONT_SAIRA, fontStyle: "italic", fontWeight: 800, fontSize: 22, minWidth: 22, textAlign: "center", color: v >= bestOf ? "#5db6ff" : undefined }}>{v}</span>
+      <button onClick={inc} disabled={decided} title={decided ? "Cặp đấu đã có người chạm mốc" : undefined} style={stepBtnStyle(decided)}>+</button>
     </div>
   );
 
   // One row per player: the name takes the full card width and truncates only
   // when truly long; the machine box + score stepper sit on the right.
-  const playerRow = (fullName: string | null, nick: string | null, mv: string, setMv: (s: string) => void, score: number, dec: () => void, inc: () => void, atCap: boolean) => (
+  const playerRow = (fullName: string | null, nick: string | null, mv: string, setMv: (s: string) => void, score: number, dec: () => void, inc: () => void) => (
     <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: FONT_SAIRA, fontWeight: 700, fontSize: 16, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{fullName ?? nick ?? "Chờ KQ"}</div>
@@ -261,16 +264,16 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
       </div>
       <input value={mv} onChange={(e) => setMv(e.target.value.replace(/\D/g, ""))} placeholder="máy" title="Số máy"
         style={{ width: 46, padding: "3px 6px", borderRadius: 6, background: "rgba(255,255,255,.05)", border: "1px solid #2c3470", color: "#9bd8ff", fontFamily: FONT_MONO, fontSize: 11, textAlign: "center", outline: "none", flexShrink: 0 }} />
-      <div style={{ flexShrink: 0 }}>{stepper(score, dec, inc, atCap)}</div>
+      <div style={{ flexShrink: 0 }}>{stepper(score, dec, inc)}</div>
     </div>
   );
 
   return (
     <div style={{ background: "rgba(255,255,255,.03)", border, borderRadius: 11, padding: "12px 14px" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {playerRow(m.an_full, m.an, String(m1), (s) => setM1(s), s1, decS1, incS1, s1 >= bestOf)}
+        {playerRow(m.an_full, m.an, String(m1), (s) => setM1(s), s1, decS1, incS1)}
         <div style={{ height: 1, background: "rgba(93,182,255,.1)" }} />
-        {playerRow(m.bn_full, m.bn, String(m2), (s) => setM2(s), s2, decS2, incS2, s2 >= bestOf)}
+        {playerRow(m.bn_full, m.bn, String(m2), (s) => setM2(s), s2, decS2, incS2)}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
         <Select value={status} onChange={(e) => { const st = e.target.value as MatchStatus; setStatus(st); void doSave(s1, s2, st); }} style={{ width: "auto", padding: "6px 10px", fontSize: 12 }}>

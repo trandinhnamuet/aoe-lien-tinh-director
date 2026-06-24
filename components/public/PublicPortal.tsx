@@ -23,9 +23,31 @@ function buildSigMap(s: ClusterSnapshot): Map<string, string> {
   return map;
 }
 
+/** A round is "finished" when it has matches and every one of them is done. */
+function roundFinished(r: RoundSnapshot): boolean {
+  let total = 0, allDone = true;
+  if (r.type === "group") {
+    for (const g of r.groups) for (const m of g.matches) { total++; if (!m.done) allDone = false; }
+  } else if (r.type === "swiss") {
+    for (const leg of r.legs) for (const m of leg.matches) { total++; if (m.status !== "done") allDone = false; }
+  } else {
+    for (const col of r.columns) for (const n of col.nodes) { if (!n.id) continue; total++; if (n.status !== "done") allDone = false; }
+  }
+  return total > 0 && allDone;
+}
+
+/** Default landing tab: the first round without final results; if every round
+ *  is finished, the last (final) round; "dashboard" only when there are none. */
+function defaultRoute(snap: ClusterSnapshot): string {
+  const rounds = snap.rounds;
+  if (!rounds.length) return "dashboard";
+  const active = rounds.find((r) => !roundFinished(r));
+  return active ? active.id : rounds[rounds.length - 1].id;
+}
+
 export default function PublicPortal({ initial }: { initial: ClusterSnapshot }) {
   const [snap, setSnap] = useState<ClusterSnapshot>(initial);
-  const [route, setRoute] = useState<string>("dashboard");
+  const [route, setRoute] = useState<string>(() => defaultRoute(initial));
   const [selOpen, setSelOpen] = useState(false);
   const [flash, setFlash] = useState<Record<string, number>>({});
   const [confettiOn, setConfettiOn] = useState(false);
@@ -50,7 +72,7 @@ export default function PublicPortal({ initial }: { initial: ClusterSnapshot }) 
     const next: ClusterSnapshot = await r.json();
     sigRef.current = buildSigMap(next);
     setSnap(next);
-    setRoute("dashboard");
+    setRoute(defaultRoute(next));
     setSelOpen(false);
   }, []);
 
