@@ -2,7 +2,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { updateResult, setMatchMachines } from "@/lib/actions";
+import { updateResult } from "@/lib/actions";
 import { effectiveBestOf } from "@/lib/pairing";
 import type { ClusterWithMeta, AdminMatch, TournamentWithCount } from "@/lib/admin-queries";
 import type { MatchStatus, Round } from "@/lib/types";
@@ -16,6 +16,17 @@ export default function ResultsClient({ tournaments, tournamentId, clusters, clu
   const router = useRouter();
   const { msg, show } = useToast();
   const [search, setSearch] = useState("");
+  // Client-side status overrides so the "x/N xong" counters update instantly
+  // on each save WITHOUT a full-page router.refresh() per click (which caused
+  // a refetch storm + slow bulk entry). One trailing refresh syncs the server.
+  const [statuses, setStatuses] = useState<Record<string, MatchStatus>>({});
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const statusOf = (m: AdminMatch): MatchStatus => statuses[m.id] ?? m.status;
+  function onMatchSaved(id: string, st: MatchStatus) {
+    setStatuses((prev) => (prev[id] === st ? prev : { ...prev, [id]: st }));
+    clearTimeout(refreshTimer.current);
+    refreshTimer.current = setTimeout(() => router.refresh(), 2000);
+  }
 
   const q = search.trim().toLowerCase();
 
@@ -62,7 +73,7 @@ export default function ResultsClient({ tournaments, tournamentId, clusters, clu
 
       {roundEntries.map((r) => {
         const nextRound = roundsSorted.find((rd) => rd.order_no > r.order);
-        const { complete, statsText } = roundStats(r.allMatches);
+        const { complete, statsText } = roundStats(r.allMatches, statusOf);
         const filtered = r.allMatches.filter(matchesSearch);
 
         return (
@@ -105,8 +116,8 @@ export default function ResultsClient({ tournaments, tournamentId, clusters, clu
                   sub={sub}
                   matches={filteredGroup}
                   total={list.length}
-                  doneCount={list.filter((m) => m.status === "done").length}
-                  onSaved={() => { show("Đã lưu"); router.refresh(); }}
+                  doneCount={list.filter((m) => statusOf(m) === "done").length}
+                  onSaved={onMatchSaved}
                   onError={show}
                 />
               );
@@ -120,11 +131,11 @@ export default function ResultsClient({ tournaments, tournamentId, clusters, clu
 }
 
 /** Compute completion stats for a round, accounting for swiss leg requirements. */
-function roundStats(matches: AdminMatch[]): { complete: boolean; statsText: string } {
+function roundStats(matches: AdminMatch[], statusOf: (m: AdminMatch) => MatchStatus): { complete: boolean; statsText: string } {
   if (matches.length === 0) return { complete: false, statsText: "Chưa có cặp đấu" };
 
   const total = matches.length;
-  const done = matches.filter((m) => m.status === "done").length;
+  const done = matches.filter((m) => statusOf(m) === "done").length;
   const allDone = done === total;
 
   const firstMatch = matches[0];
@@ -145,7 +156,7 @@ function roundStats(matches: AdminMatch[]): { complete: boolean; statsText: stri
  *  in the leg is already done, open otherwise. */
 function LegSection({ sub, matches, total, doneCount, onSaved, onError }: {
   sub: string; matches: AdminMatch[]; total: number; doneCount: number;
-  onSaved: () => void; onError: (s: string) => void;
+  onSaved: (id: string, st: MatchStatus) => void; onError: (s: string) => void;
 }) {
   const allDone = total > 0 && doneCount === total;
   const [open, setOpen] = useState(!allDone);
@@ -170,7 +181,7 @@ function LegSection({ sub, matches, total, doneCount, onSaved, onError }: {
   );
 }
 
-function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: () => void; onError: (s: string) => void }) {
+function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: string, st: MatchStatus) => void; onError: (s: string) => void }) {
   const bestOf = effectiveBestOf(m.round_config, m.leg_name) || 99;
 
   const [s1, setS1] = useState(m.player1_score);
@@ -189,10 +200,9 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: () => vo
 
   async function doSave(score1: number, score2: number, st: MatchStatus) {
     setBusy(true);
-    await setMatchMachines(m.id, m1 === "" ? null : +m1, m2 === "" ? null : +m2);
-    const r = await updateResult(m.id, score1, score2, st);
+    const r = await updateResult(m.id, score1, score2, st, m1 === "" ? null : +m1, m2 === "" ? null : +m2);
     setBusy(false);
-    if (r.ok) onSaved(); else onError(r.error);
+    if (r.ok) { setStatus(r.status); onSaved(m.id, r.status); } else onError(r.error);
   }
 
   function schedSave(score1: number, score2: number, st: MatchStatus) {
