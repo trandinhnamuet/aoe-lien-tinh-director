@@ -31,9 +31,9 @@ export function Btn({
 export function Field({ label, hint, children }: { label?: string; hint?: string; children: React.ReactNode }) {
   return (
     <label style={{ display: "block", marginBottom: 12 }}>
-      {label && <div style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 1, color: "#9aaad8", marginBottom: 6, textTransform: "uppercase" }}>{label}</div>}
+      {label && <div style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 1, color: "#b9c3e6", marginBottom: 6, textTransform: "uppercase" }}>{label}</div>}
       {children}
-      {hint && <div style={{ fontSize: 11, color: "#7884a8", marginTop: 4 }}>{hint}</div>}
+      {hint && <div style={{ fontSize: 11, color: "#9ca8ce", marginTop: 4 }}>{hint}</div>}
     </label>
   );
 }
@@ -63,7 +63,7 @@ export function PageTitle({ title, sub, right }: { title: string; sub?: string; 
     <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 22 }}>
       <div>
         <h1 style={{ fontFamily: FONT_SAIRA, fontWeight: 800, fontStyle: "italic", fontSize: 26, textTransform: "uppercase", margin: 0, background: "linear-gradient(180deg,#fff,#9bd8ff)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>{title}</h1>
-        {sub && <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#9aaad8", letterSpacing: 1, marginTop: 6 }}>{sub}</div>}
+        {sub && <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6", letterSpacing: 1, marginTop: 6 }}>{sub}</div>}
       </div>
       {right}
     </div>
@@ -101,8 +101,8 @@ export function useToast() {
 export function Badge({ children, tone = "muted" }: { children: React.ReactNode; tone?: "live" | "done" | "muted" | "warn" }) {
   const tones: Record<string, React.CSSProperties> = {
     live: { color: "#a9d6ff", background: "rgba(93,182,255,.15)", border: "1px solid rgba(93,182,255,.4)" },
-    done: { color: "#9aaad8", background: "rgba(255,255,255,.05)", border: "1px solid transparent" },
-    muted: { color: "#9aaad8", background: "rgba(255,255,255,.04)", border: "1px solid transparent" },
+    done: { color: "#b9c3e6", background: "rgba(255,255,255,.05)", border: "1px solid transparent" },
+    muted: { color: "#b9c3e6", background: "rgba(255,255,255,.04)", border: "1px solid transparent" },
     warn: { color: "#ffce6b", background: "rgba(255,206,107,.08)", border: "1px solid rgba(255,206,107,.3)" },
   };
   return <span style={{ fontFamily: FONT_MONO, fontSize: 9, letterSpacing: 1, padding: "2px 7px", borderRadius: 4, ...tones[tone] }}>{children}</span>;

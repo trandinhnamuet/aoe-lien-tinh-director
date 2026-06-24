@@ -68,7 +68,7 @@ export default function PairingClient({ tournaments, tournamentId, clusters, clu
   }
 
   if (!round) {
-    return <div><PageTitle title="Xếp cặp / chia bảng" sub="A7" /><Card><div style={{ color: "#9aaad8", fontFamily: FONT_MONO, fontSize: 13 }}>Cụm chưa có vòng đấu. Tạo vòng ở mục Thể thức.</div></Card></div>;
+    return <div><PageTitle title="Xếp cặp / chia bảng" sub="A7" /><Card><div style={{ color: "#b9c3e6", fontFamily: FONT_MONO, fontSize: 13 }}>Cụm chưa có vòng đấu. Tạo vòng ở mục Thể thức.</div></Card></div>;
   }
 
   const type = round.round_type;
@@ -116,9 +116,9 @@ export default function PairingClient({ tournaments, tournamentId, clusters, clu
               </div>
             </label>
           ))}
-          {visiblePlayers.length === 0 && <div style={{ color: "#9aaad8", fontFamily: FONT_MONO, fontSize: 13 }}>Cụm chưa có game thủ.</div>}
+          {visiblePlayers.length === 0 && <div style={{ color: "#b9c3e6", fontFamily: FONT_MONO, fontSize: 13 }}>Cụm chưa có game thủ.</div>}
         </div>
-        <div style={{ fontSize: 12, color: "#9aaad8", marginTop: 8 }}>Lưu danh sách trước, rồi bốc thăm bên dưới. (Danh sách đã lưu: {participantIds.length})</div>
+        <div style={{ fontSize: 12, color: "#b9c3e6", marginTop: 8 }}>Lưu danh sách trước, rồi bốc thăm bên dưới. (Danh sách đã lưu: {participantIds.length})</div>
       </Card>
 
       {/* type-specific tool */}
@@ -148,7 +148,7 @@ export default function PairingClient({ tournaments, tournamentId, clusters, clu
                       <div key={i} style={{ background: "rgba(255,255,255,.03)", border: "1px solid rgba(93,182,255,.16)", borderRadius: 10, padding: 12, animation: "shuffle .4s" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
                           <div style={{ fontFamily: FONT_SAIRA, fontWeight: 800, fontStyle: "italic", color: "#5db6ff" }}>Bảng {String.fromCharCode(65 + i)}</div>
-                          <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#9aaad8" }}>{ids.length} người</div>
+                          <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6" }}>{ids.length} người</div>
                         </div>
                         {ids.map((id) => { const p = nameOf.get(id); return (
                           <div key={id} style={{ padding: "2px 0" }}>
@@ -209,7 +209,7 @@ export default function PairingClient({ tournaments, tournamentId, clusters, clu
                     {(() => { const pa = nameOf.get(a); return (
                       <div><div style={{ fontFamily: FONT_SAIRA, fontWeight: 700, fontSize: 14 }}>{pa?.name ?? a}{recBadge(a)}</div>{pa?.nick && <div style={{ fontFamily: FONT_SAIRA, fontWeight: 400, fontSize: 11, color: "#9bd8ff" }}>{pa.nick}</div>}</div>
                     ); })()}
-                    <span style={{ color: "#9aaad8", fontFamily: FONT_MONO, fontSize: 11, padding: "0 8px" }}>vs</span>
+                    <span style={{ color: "#b9c3e6", fontFamily: FONT_MONO, fontSize: 11, padding: "0 8px" }}>vs</span>
                     {b ? (() => { const pb = nameOf.get(b); return (
                       <div style={{ textAlign: "right" }}><div style={{ fontFamily: FONT_SAIRA, fontWeight: 700, fontSize: 14 }}>{pb?.name ?? b}{recBadge(b)}</div>{pb?.nick && <div style={{ fontFamily: FONT_SAIRA, fontWeight: 400, fontSize: 11, color: "#9bd8ff" }}>{pb.nick}</div>}</div>
                     ); })() : <Badge tone="warn">BYE</Badge>}
@@ -236,7 +236,7 @@ export default function PairingClient({ tournaments, tournamentId, clusters, clu
                 </div>
                 {bracketPreview && (
                   <>
-                    <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#9aaad8", marginBottom: 10 }}>
+                    <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6", marginBottom: 10 }}>
                       Xem trước cây phân nhánh — winner mỗi cặp đi tiếp sang cột bên phải. Slot &quot;Thắng …&quot; cho biết đối thủ tiềm năng ở vòng sau.
                     </div>
                     <BracketPreview ids={bracketPreview} nameOf={nameOf} />
@@ -281,7 +281,7 @@ function BracketPreview({ ids, nameOf }: { ids: string[]; nameOf: Map<string, { 
         </div>
       );
     }
-    return <div style={{ fontFamily: FONT_MONO, fontSize: 12, color: "#7e88aa", fontStyle: "italic" }}>{label}</div>;
+    return <div style={{ fontFamily: FONT_MONO, fontSize: 12, color: "#a8b3d8", fontStyle: "italic" }}>{label}</div>;
   };
 
   // Min width keeps it readable when there are many rounds (then it scrolls);
@@ -298,7 +298,7 @@ function BracketPreview({ ids, nameOf }: { ids: string[]; nameOf: Map<string, { 
                 {col.nodes.map((n, ni) => (
                   <div key={ni} className="bkp-match">
                     <div className={`bkp-card${isFinal ? " final" : ""}`} style={{ animation: "shuffle .4s" }}>
-                      <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: "#9aaad8", letterSpacing: 1, marginBottom: 7 }}>{col.name.toUpperCase()} {ni + 1}</div>
+                      <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: "#b9c3e6", letterSpacing: 1, marginBottom: 7 }}>{col.name.toUpperCase()} {ni + 1}</div>
                       {slot(n.aId, n.aLabel)}
                       <div style={{ height: 1, background: "rgba(93,182,255,.14)", margin: "8px 0" }} />
                       {slot(n.bId, n.bLabel)}

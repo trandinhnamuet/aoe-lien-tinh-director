@@ -23,7 +23,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           <span style={{ width: 36, height: 36, borderRadius: 9, background: "linear-gradient(150deg,#9bd8ff,#3f7fe0)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_SAIRA, fontStyle: "italic", fontWeight: 800, color: "#0a1c44", fontSize: 20 }}>A</span>
           <div>
             <div style={{ fontFamily: FONT_SAIRA, fontWeight: 800, fontStyle: "italic", fontSize: 16, color: "#e8eeff", lineHeight: 1 }}>DIRECTOR</div>
-            <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#7e8cc8", letterSpacing: 1.5, marginTop: 3 }}>BẢNG ĐIỀU KHIỂN</div>
+            <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#aab6e0", letterSpacing: 1.5, marginTop: 3 }}>BẢNG ĐIỀU KHIỂN</div>
           </div>
         </Link>
         <nav style={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -37,7 +37,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             );
           })}
         </nav>
-        <a href="/" target="_blank" style={{ display: "block", marginTop: 22, padding: "10px 12px", borderRadius: 9, textDecoration: "none", color: "#7e8cc8", fontFamily: FONT_MONO, fontSize: 11, letterSpacing: 1, border: "1px dashed #2c3470" }}>↗ XEM CỔNG PUBLIC</a>
+        <a href="/" target="_blank" style={{ display: "block", marginTop: 22, padding: "10px 12px", borderRadius: 9, textDecoration: "none", color: "#aab6e0", fontFamily: FONT_MONO, fontSize: 11, letterSpacing: 1, border: "1px dashed #2c3470" }}>↗ XEM CỔNG PUBLIC</a>
       </aside>
       <main style={{ flex: 1, minWidth: 0, padding: "28px 28px 80px" }}>{children}</main>
     </div>

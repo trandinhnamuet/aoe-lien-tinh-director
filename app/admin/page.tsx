@@ -8,7 +8,7 @@ export default async function AdminDashboard() {
   const { settings, cluster, tournaments, counts } = await adminOverview();
   const stat = (label: string, value: string | number, color = "#bfe2ff") => (
     <Card style={{ padding: 18 }}>
-      <div style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 1, color: "#7e8cc8" }}>{label}</div>
+      <div style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 1, color: "#aab6e0" }}>{label}</div>
       <div style={{ fontFamily: FONT_SAIRA, fontWeight: 800, fontStyle: "italic", fontSize: 32, color }}>{value}</div>
     </Card>
   );
@@ -21,7 +21,7 @@ export default async function AdminDashboard() {
   return (
     <div>
       <h1 style={{ fontFamily: FONT_SAIRA, fontWeight: 800, fontStyle: "italic", fontSize: 26, textTransform: "uppercase", margin: "0 0 4px", background: "linear-gradient(180deg,#fff,#9bd8ff)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>Bảng điều khiển</h1>
-      <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#7e8cc8", letterSpacing: 1, marginBottom: 22 }}>
+      <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#aab6e0", letterSpacing: 1, marginBottom: 22 }}>
         CỤM HIỆN TẠI: {cluster ? cluster.name.toUpperCase() : "CHƯA CHỌN"}
       </div>
 
@@ -29,7 +29,7 @@ export default async function AdminDashboard() {
         {stat("Số giải đấu", tournaments.length)}
         {stat("Game thủ (cụm)", counts.players)}
         {stat("Cặp đã có KQ", `${counts.matchesDone}/${counts.matchesTotal}`, "#5db6ff")}
-        {stat("Kiểm tra CCCD", settings.check_duplicate_cccd ? "BẬT" : "TẮT", settings.check_duplicate_cccd ? "#5db6ff" : "#6675a6")}
+        {stat("Kiểm tra CCCD", settings.check_duplicate_cccd ? "BẬT" : "TẮT", settings.check_duplicate_cccd ? "#5db6ff" : "#969ec2")}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px,1fr))", gap: 14 }}>
@@ -37,7 +37,7 @@ export default async function AdminDashboard() {
           <Link key={href} href={href} style={{ textDecoration: "none" }}>
             <Card style={{ cursor: "pointer" }}>
               <div style={{ fontFamily: FONT_SAIRA, fontWeight: 700, fontSize: 19, textTransform: "uppercase", color: "#e8eeff" }}>{title}</div>
-              <div style={{ fontSize: 12, color: "#7e8cc8", marginTop: 4 }}>{desc}</div>
+              <div style={{ fontSize: 12, color: "#aab6e0", marginTop: 4 }}>{desc}</div>
             </Card>
           </Link>
         ))}

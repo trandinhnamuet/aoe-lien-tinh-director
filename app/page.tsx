@@ -9,7 +9,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
 
   if (!clusterId) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#8a96c0", fontFamily: "'IBM Plex Mono',monospace", padding: 24, textAlign: "center" }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#aab4d8", fontFamily: "'IBM Plex Mono',monospace", padding: 24, textAlign: "center" }}>
         Chưa có cụm thi đấu nào được công bố. Vui lòng quay lại sau.
       </div>
     );
@@ -18,7 +18,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
   const snap = await getClusterSnapshot(clusterId);
   if (!snap || snap.cluster.status === "draft") {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#8a96c0", fontFamily: "'IBM Plex Mono',monospace", padding: 24, textAlign: "center" }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#aab4d8", fontFamily: "'IBM Plex Mono',monospace", padding: 24, textAlign: "center" }}>
         Cụm thi đấu này chưa được công bố.
       </div>
     );

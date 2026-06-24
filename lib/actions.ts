@@ -276,7 +276,7 @@ export async function commitPairs(roundId: string, legName: string | null, pairs
 }
 
 // ---------------- Bracket (knockout_single) ----------------
-import { bracketLegNames, isPowerOfTwo } from "./pairing";
+import { bracketLegNames, isPowerOfTwo, effectiveBestOf } from "./pairing";
 export async function generateBracket(roundId: string, orderedPlayerIds: string[], machines: (number | null)[], thirdPlace: boolean): Promise<Result> {
   try {
     await requireAdmin();
@@ -347,15 +347,17 @@ export async function updateResult(matchId: string, s1: number, s2: number, stat
   try {
     await requireAdmin();
     await sql.begin(async (tx) => {
-      const [m] = await tx<{ player1_id: string | null; player2_id: string | null; next_match_id: string | null; next_match_slot: number | null; loser_next_match_id: string | null; round_config: Record<string, unknown> | null }[]>`
-        select m.player1_id, m.player2_id, m.next_match_id, m.next_match_slot, m.loser_next_match_id, r.config as round_config
-        from aoe.matches m join aoe.rounds r on r.id = m.round_id where m.id=${matchId}`;
+      const [m] = await tx<{ player1_id: string | null; player2_id: string | null; next_match_id: string | null; next_match_slot: number | null; loser_next_match_id: string | null; round_config: Record<string, unknown> | null; leg_name: string | null }[]>`
+        select m.player1_id, m.player2_id, m.next_match_id, m.next_match_slot, m.loser_next_match_id, r.config as round_config, l.name as leg_name
+        from aoe.matches m join aoe.rounds r on r.id = m.round_id
+        left join aoe.legs l on l.id = m.leg_id where m.id=${matchId}`;
       if (!m) throw new Error("Không tìm thấy cặp đấu");
-      // Server-side enforcement for capped formats (best_of):
+      // Server-side enforcement for capped formats (best_of), resolved per-round
+      // (e.g. Chung kết chạm 5 while earlier rounds chạm 3):
       //  - reaching the cap finishes the match (done + winner);
       //  - dropping below the cap un-finishes it — e.g. editing 2–0 back to 1–0
       //    reverts the match to "live"/"pending" so that win is no longer counted.
-      const bestOf = Number((m.round_config as Record<string, number> | null)?.best_of ?? 0);
+      const bestOf = effectiveBestOf(m.round_config, m.leg_name);
       let finalStatus: MatchStatus = status;
       if (bestOf > 0) {
         if (s1 >= bestOf || s2 >= bestOf) finalStatus = "done";

@@ -106,7 +106,7 @@ export default function MatchCard(p: MatchCardProps) {
       </div>
 
       {pending && (
-        <div style={{ position: "absolute", top: 14, right: 16, fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: "#7e8cc8", letterSpacing: 1 }}>
+        <div style={{ position: "absolute", top: 14, right: 16, fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: "#aab6e0", letterSpacing: 1 }}>
           CHỜ
         </div>
       )}

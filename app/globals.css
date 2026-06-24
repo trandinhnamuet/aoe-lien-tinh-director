@@ -9,6 +9,9 @@ body {
   color: #f0f4ff;
   font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* Livestream readability: scale the whole UI up ~15% so text stays legible
+     on phone screens. Uniform zoom keeps layout proportions intact. */
+  zoom: 1.15;
 }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -46,7 +49,7 @@ option { background-color: #0e1336; color: #f0f4ff; }
 .bkp { display: flex; align-items: stretch; width: 100%; }
 .bkp-round { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; padding-right: 40px; }
 .bkp-round:last-child { padding-right: 0; }
-.bkp-title { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 1px; color: #9aaad8; text-align: center; margin-bottom: 12px; }
+.bkp-title { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 1px; color: #b9c3e6; text-align: center; margin-bottom: 12px; }
 .bkp-title.final { color: #9bd8ff; }
 .bkp-body { flex: 1; display: flex; flex-direction: column; }
 /* grow to fill the (stretched) round height but never shrink below content,

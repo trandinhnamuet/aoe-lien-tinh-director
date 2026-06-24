@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { updateResult, setMatchMachines } from "@/lib/actions";
+import { effectiveBestOf } from "@/lib/pairing";
 import type { ClusterWithMeta, AdminMatch, TournamentWithCount } from "@/lib/admin-queries";
 import type { MatchStatus, Round } from "@/lib/types";
 import { Card, Input, PageTitle, Select, Toast, useToast, FONT_SAIRA, FONT_MONO } from "@/components/admin/ui";
@@ -57,7 +58,7 @@ export default function ResultsClient({ tournaments, tournamentId, clusters, clu
         />
       </div>
 
-      {roundEntries.length === 0 && <Card><div style={{ color: "#9aaad8", fontFamily: FONT_MONO, fontSize: 13 }}>Vòng đấu chưa có cặp đấu nào. Hãy xếp cặp / chia bảng trước.</div></Card>}
+      {roundEntries.length === 0 && <Card><div style={{ color: "#b9c3e6", fontFamily: FONT_MONO, fontSize: 13 }}>Vòng đấu chưa có cặp đấu nào. Hãy xếp cặp / chia bảng trước.</div></Card>}
 
       {roundEntries.map((r) => {
         const nextRound = roundsSorted.find((rd) => rd.order_no > r.order);
@@ -70,7 +71,7 @@ export default function ResultsClient({ tournaments, tournamentId, clusters, clu
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
               <div style={{ fontFamily: FONT_SAIRA, fontWeight: 800, fontStyle: "italic", fontSize: 22, textTransform: "uppercase" }}>{r.name}</div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <span style={{ fontFamily: FONT_MONO, fontSize: 12, color: complete ? "#5db6ff" : "#9aaad8", background: complete ? "rgba(93,182,255,.1)" : "rgba(255,255,255,.04)", border: `1px solid ${complete ? "rgba(93,182,255,.4)" : "#2c3470"}`, padding: "4px 10px", borderRadius: 20 }}>
+                <span style={{ fontFamily: FONT_MONO, fontSize: 12, color: complete ? "#5db6ff" : "#b9c3e6", background: complete ? "rgba(93,182,255,.1)" : "rgba(255,255,255,.04)", border: `1px solid ${complete ? "rgba(93,182,255,.4)" : "#2c3470"}`, padding: "4px 10px", borderRadius: 20 }}>
                   {complete ? "✓ " : ""}{statsText}
                 </span>
                 {nextRound ? (
@@ -81,7 +82,7 @@ export default function ResultsClient({ tournaments, tournamentId, clusters, clu
                     </Link>
                   ) : (
                     <Link href={`/admin/pairing?tournament=${tournamentId}&cluster=${clusterId}&round=${nextRound.id}`}
-                      style={{ fontFamily: FONT_MONO, fontSize: 12, color: "#9aaad8", background: "transparent", border: "1px solid #2c3470", padding: "4px 12px", borderRadius: 20, textDecoration: "none", whiteSpace: "nowrap" }}>
+                      style={{ fontFamily: FONT_MONO, fontSize: 12, color: "#b9c3e6", background: "transparent", border: "1px solid #2c3470", padding: "4px 12px", borderRadius: 20, textDecoration: "none", whiteSpace: "nowrap" }}>
                       {nextRound.name} →
                     </Link>
                   )
@@ -93,7 +94,7 @@ export default function ResultsClient({ tournaments, tournamentId, clusters, clu
 
             {/* Groups/legs */}
             {filtered.length === 0 && q && (
-              <div style={{ color: "#9aaad8", fontFamily: FONT_MONO, fontSize: 12, padding: "8px 0" }}>Không tìm thấy cặp đấu phù hợp.</div>
+              <div style={{ color: "#b9c3e6", fontFamily: FONT_MONO, fontSize: 12, padding: "8px 0" }}>Không tìm thấy cặp đấu phù hợp.</div>
             )}
             {[...r.groups.entries()].map(([sub, list]) => {
               const filteredGroup = list.filter(matchesSearch);
@@ -158,7 +159,7 @@ function LegSection({ sub, matches, total, doneCount, onSaved, onError }: {
       >
         <span style={{ color: "#5db6ff", fontSize: 12, width: 12 }}>{open ? "▾" : "▸"}</span>
         <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#9bd8ff", letterSpacing: 1, flex: 1 }}>{label.toUpperCase()}</span>
-        <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: allDone ? "#5db6ff" : "#9aaad8" }}>{allDone ? "✓ " : ""}{doneCount}/{total} xong</span>
+        <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: allDone ? "#5db6ff" : "#b9c3e6" }}>{allDone ? "✓ " : ""}{doneCount}/{total} xong</span>
       </button>
       {open && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px,1fr))", gap: 10 }}>
@@ -170,7 +171,7 @@ function LegSection({ sub, matches, total, doneCount, onSaved, onError }: {
 }
 
 function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: () => void; onError: (s: string) => void }) {
-  const bestOf = (m.round_config as Record<string, number> | null)?.best_of ?? 99;
+  const bestOf = effectiveBestOf(m.round_config, m.leg_name) || 99;
 
   const [s1, setS1] = useState(m.player1_score);
   const [s2, setS2] = useState(m.player2_score);
@@ -231,27 +232,26 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: () => vo
     </div>
   );
 
-  const nameRow = (fullName: string | null, nick: string | null, mv: string, setMv: (s: string) => void) => (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontFamily: FONT_SAIRA, fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{fullName ?? nick ?? "Chờ KQ"}</div>
-        {fullName && nick && fullName !== nick && <div style={{ fontFamily: FONT_SAIRA, fontWeight: 500, fontSize: 11, color: "#9bd8ff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{nick}</div>}
+  // One row per player: the name takes the full card width and truncates only
+  // when truly long; the machine box + score stepper sit on the right.
+  const playerRow = (fullName: string | null, nick: string | null, mv: string, setMv: (s: string) => void, score: number, dec: () => void, inc: () => void, atCap: boolean) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: FONT_SAIRA, fontWeight: 700, fontSize: 16, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{fullName ?? nick ?? "Chờ KQ"}</div>
+        {fullName && nick && fullName !== nick && <div style={{ fontFamily: FONT_SAIRA, fontWeight: 500, fontSize: 12, color: "#9bd8ff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{nick}</div>}
       </div>
       <input value={mv} onChange={(e) => setMv(e.target.value.replace(/\D/g, ""))} placeholder="máy" title="Số máy"
         style={{ width: 46, padding: "3px 6px", borderRadius: 6, background: "rgba(255,255,255,.05)", border: "1px solid #2c3470", color: "#9bd8ff", fontFamily: FONT_MONO, fontSize: 11, textAlign: "center", outline: "none", flexShrink: 0 }} />
+      <div style={{ flexShrink: 0 }}>{stepper(score, dec, inc, atCap)}</div>
     </div>
   );
 
   return (
     <div style={{ background: "rgba(255,255,255,.03)", border, borderRadius: 11, padding: "12px 14px" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 10, alignItems: "center" }}>
-        {nameRow(m.an_full, m.an, String(m1), (s) => setM1(s))}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {stepper(s1, decS1, incS1, s1 >= bestOf)}
-          <span style={{ color: "#9aaad8" }}>:</span>
-          {stepper(s2, decS2, incS2, s2 >= bestOf)}
-        </div>
-        <div style={{ justifySelf: "end" }}>{nameRow(m.bn_full, m.bn, String(m2), (s) => setM2(s))}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {playerRow(m.an_full, m.an, String(m1), (s) => setM1(s), s1, decS1, incS1, s1 >= bestOf)}
+        <div style={{ height: 1, background: "rgba(93,182,255,.1)" }} />
+        {playerRow(m.bn_full, m.bn, String(m2), (s) => setM2(s), s2, decS2, incS2, s2 >= bestOf)}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
         <Select value={status} onChange={(e) => { const st = e.target.value as MatchStatus; setStatus(st); void doSave(s1, s2, st); }} style={{ width: "auto", padding: "6px 10px", fontSize: 12 }}>
@@ -259,8 +259,8 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: () => vo
           <option value="live">Đang đánh</option>
           <option value="done">Xong</option>
         </Select>
-        {busy && <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#9aaad8", marginLeft: 4 }}>Đang lưu…</span>}
-        {bestOf < 99 && <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: "#9aaad8", marginLeft: "auto" }}>best of {bestOf}</span>}
+        {busy && <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6", marginLeft: 4 }}>Đang lưu…</span>}
+        {bestOf < 99 && <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: "#b9c3e6", marginLeft: "auto" }}>best of {bestOf}</span>}
       </div>
     </div>
   );
@@ -271,7 +271,7 @@ function stepBtnStyle(disabled: boolean): React.CSSProperties {
     width: 28, height: 28, borderRadius: 8,
     border: "1px solid rgba(93,182,255,.4)",
     background: disabled ? "rgba(93,182,255,.03)" : "rgba(93,182,255,.08)",
-    color: disabled ? "#4a5070" : "#bfe2ff",
+    color: disabled ? "#828aac" : "#bfe2ff",
     cursor: disabled ? "not-allowed" : "pointer",
     fontSize: 16, lineHeight: 1,
   };

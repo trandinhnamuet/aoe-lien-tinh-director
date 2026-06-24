@@ -38,9 +38,15 @@ function configText(type: RoundType, c: Record<string, unknown>): string {
   }
   if (type === "knockout_single") {
     const bo = num(c, "best_of", 3);
-    const fbo = num(c, "final_best_of", bo);
+    const byRound = (c.best_of_by_round as Record<string, number> | undefined) ?? {};
+    const overrides = Object.entries(byRound).filter(([, v]) => typeof v === "number" && v > 0);
+    // legacy final_best_of shown as a Chung kết override if no explicit one set
+    if (!byRound["Chung kết"] && typeof c.final_best_of === "number" && c.final_best_of > 0) {
+      overrides.push(["Chung kết", c.final_best_of as number]);
+    }
+    const ovText = overrides.length ? " · " + overrides.map(([k, v]) => `${k} chạm ${v}`).join(" · ") : "";
     const third = c.third_place ? " · có tranh 3–4" : "";
-    return `Chạm ${bo} · CK chạm ${fbo}${third}`;
+    return `Chạm ${bo}${ovText}${third}`;
   }
   return `Chạm ${num(c, "best_of", 3)}`;
 }

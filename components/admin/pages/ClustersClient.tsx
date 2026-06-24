@@ -96,8 +96,8 @@ export default function ClustersClient({ tournaments, clusters, tournamentId, cu
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
                 <div>
                   <div style={{ fontFamily: FONT_SAIRA, fontWeight: 800, fontStyle: "italic", fontSize: 21, textTransform: "uppercase" }}>{c.name}</div>
-                  <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#9aaad8", marginTop: 4 }}>{c.date_fmt ?? "—"} · {c.location ?? "—"}</div>
-                  <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#9aaad8", marginTop: 3 }}>{c.player_count} game thủ · {c.round_count} vòng</div>
+                  <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6", marginTop: 4 }}>{c.date_fmt ?? "—"} · {c.location ?? "—"}</div>
+                  <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6", marginTop: 3 }}>{c.player_count} game thủ · {c.round_count} vòng</div>
                 </div>
                 <Badge tone={c.status === "live" ? "live" : c.status === "done" ? "done" : "muted"}>{STATUS_LABEL[c.status].toUpperCase()}</Badge>
               </div>
@@ -120,7 +120,7 @@ export default function ClustersClient({ tournaments, clusters, tournamentId, cu
             </Card>
           );
         })}
-        {clusters.length === 0 && <div style={{ color: "#9aaad8", fontFamily: FONT_MONO, fontSize: 13 }}>Chưa có cụm nào cho giải này.</div>}
+        {clusters.length === 0 && <div style={{ color: "#b9c3e6", fontFamily: FONT_MONO, fontSize: 13 }}>Chưa có cụm nào cho giải này.</div>}
       </div>
       <Toast message={msg} />
     </div>

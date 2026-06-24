@@ -7,6 +7,9 @@ import type { ClusterWithMeta, FormatTemplate, TournamentWithCount } from "@/lib
 import type { Round, RoundType, RoundStatus } from "@/lib/types";
 import { Btn, Card, Field, Input, PageTitle, Select, Badge, Toast, useToast, FONT_SAIRA, FONT_MONO } from "@/components/admin/ui";
 import AdminScopePicker from "@/components/admin/AdminScopePicker";
+import { KO_ROUND_LABELS } from "@/lib/pairing";
+
+type Cfg = Record<string, number | boolean | Record<string, number>>;
 
 const TYPE_LABEL: Record<RoundType, string> = {
   group: "Chia bảng", swiss: "Nhánh thắng thua (Swiss)", knockout_multi: "Loại trực tiếp · chọn nhiều", knockout_single: "Loại trực tiếp · tìm vô địch",
@@ -19,17 +22,17 @@ export default function FormatsClient({ tournaments, tournamentId, clusters, clu
   const { msg, show } = useToast();
   const [name, setName] = useState("");
   const [type, setType] = useState<RoundType>("group");
-  const [cfg, setCfg] = useState<Record<string, number | boolean>>({ advance_per_group: 2, best_of: 3 });
+  const [cfg, setCfg] = useState<Cfg>({ advance_per_group: 2, best_of: 3 });
   const [busy, setBusy] = useState(false);
 
   const [editId, setEditId] = useState<string | null>(null);
-  const [ef, setEf] = useState<{ name: string; type: RoundType; cfg: Record<string, number | boolean> }>({ name: "", type: "group", cfg: {} });
+  const [ef, setEf] = useState<{ name: string; type: RoundType; cfg: Cfg }>({ name: "", type: "group", cfg: {} });
 
   function onType(t: RoundType) {
     setType(t);
     if (t === "group") setCfg({ advance_per_group: 2, best_of: 3 });
     else if (t === "swiss") setCfg({ wins_to_advance: 2, best_of: 2 });
-    else if (t === "knockout_single") setCfg({ best_of: 3, final_best_of: 5, third_place: true });
+    else if (t === "knockout_single") setCfg({ best_of: 3, best_of_by_round: { "Chung kết": 5 }, third_place: true });
     else setCfg({ best_of: 3 });
   }
   async function add() {
@@ -46,7 +49,15 @@ export default function FormatsClient({ tournaments, tournamentId, clusters, clu
   }
   function startEdit(r: Round) {
     setEditId(r.id);
-    setEf({ name: r.name, type: r.round_type, cfg: (r.config ?? {}) as Record<string, number | boolean> });
+    const cfg = { ...(r.config ?? {}) } as Cfg;
+    if (r.round_type === "knockout_single") {
+      // Surface legacy final_best_of as the "Chung kết" per-round override.
+      const fb = (cfg as Record<string, unknown>).final_best_of;
+      const byRound = { ...((cfg.best_of_by_round as Record<string, number>) ?? {}) };
+      if (typeof fb === "number" && fb > 0 && !byRound["Chung kết"]) byRound["Chung kết"] = fb;
+      cfg.best_of_by_round = byRound;
+    }
+    setEf({ name: r.name, type: r.round_type, cfg });
   }
   async function saveEdit() {
     if (!ef.name.trim()) { show("Nhập tên vòng"); return; }
@@ -72,6 +83,24 @@ export default function FormatsClient({ tournaments, tournamentId, clusters, clu
   const efNum = (key: string, label: string) => (
     <Field label={label}><Input type="number" value={String(ef.cfg[key] ?? 0)} onChange={(e) => setEf({ ...ef, cfg: { ...ef.cfg, [key]: +e.target.value } })} style={{ width: 90 }} /></Field>
   );
+  // Per-round "số chạm" override input (blank = use default best_of).
+  const boRound = (name: string) => {
+    const map = (cfg.best_of_by_round as Record<string, number>) ?? {};
+    return (
+      <Field label={name}><Input type="number" value={String(map[name] ?? "")} placeholder="mặc định"
+        onChange={(e) => { const v = e.target.value; const next = { ...map }; if (v === "" || +v <= 0) delete next[name]; else next[name] = +v; setCfg({ ...cfg, best_of_by_round: next }); }}
+        style={{ width: 90 }} /></Field>
+    );
+  };
+  const efBoRound = (name: string) => {
+    const map = (ef.cfg.best_of_by_round as Record<string, number>) ?? {};
+    return (
+      <Field label={name}><Input type="number" value={String(map[name] ?? "")} placeholder="mặc định"
+        onChange={(e) => { const v = e.target.value; const next = { ...map }; if (v === "" || +v <= 0) delete next[name]; else next[name] = +v; setEf({ ...ef, cfg: { ...ef.cfg, best_of_by_round: next } }); }}
+        style={{ width: 90 }} /></Field>
+    );
+  };
+  const boNote = "Để trống = dùng số chạm mặc định. Tên vòng theo số game thủ (vd 8 người: Tứ kết → Bán kết → Chung kết).";
 
   return (
     <div>
@@ -80,12 +109,12 @@ export default function FormatsClient({ tournaments, tournamentId, clusters, clu
       } />
 
       <Card style={{ marginBottom: 16 }}>
-        <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#9aaad8", letterSpacing: 1, marginBottom: 10 }}>ÁP NHANH BỘ THỂ THỨC</div>
+        <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6", letterSpacing: 1, marginBottom: 10 }}>ÁP NHANH BỘ THỂ THỨC</div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {templates.map((t) => (
             <button key={t.id} onClick={() => apply(t.id, t.name)} style={{ textAlign: "left", background: "rgba(93,182,255,.06)", border: "1px solid rgba(93,182,255,.25)", borderRadius: 10, padding: "10px 14px", cursor: "pointer", color: "#e8eeff", minWidth: 200 }}>
               <div style={{ fontFamily: FONT_SAIRA, fontWeight: 700, fontSize: 15 }}>{t.name}</div>
-              <div style={{ fontSize: 11, color: "#9aaad8", marginTop: 3 }}>{t.description}</div>
+              <div style={{ fontSize: 11, color: "#b9c3e6", marginTop: 3 }}>{t.description}</div>
             </button>
           ))}
         </div>
@@ -101,12 +130,19 @@ export default function FormatsClient({ tournaments, tournamentId, clusters, clu
           </Field>
           {type === "group" && <>{numField("advance_per_group", "Top mỗi bảng")}{numField("best_of", "Chạm")}</>}
           {type === "swiss" && <>{numField("wins_to_advance", "Thắng đi tiếp")}{numField("best_of", "Chạm")}</>}
-          {type === "knockout_single" && <>{numField("best_of", "Chạm")}{numField("final_best_of", "CK chạm")}
+          {type === "knockout_single" && <>{numField("best_of", "Chạm mặc định")}
             <Field label="Tranh 3–4"><Select value={String(cfg.third_place)} onChange={(e) => setCfg({ ...cfg, third_place: e.target.value === "true" })} style={{ width: 90 }}><option value="true">Có</option><option value="false">Không</option></Select></Field></>}
           {type === "knockout_multi" && numField("best_of", "Chạm")}
           <Field><Btn kind="primary" onClick={add} disabled={busy}>+ Thêm vòng</Btn></Field>
         </div>
-        {type === "swiss" && <div style={{ fontSize: 12, color: "#9aaad8", marginTop: 4 }}>Số lượt = {2 * (Number(cfg.wins_to_advance) || 2) - 1} (suy ra từ số thắng để đi tiếp).</div>}
+        {type === "knockout_single" && (
+          <div style={{ marginTop: 14 }}>
+            <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6", letterSpacing: 1, marginBottom: 8 }}>SỐ CHẠM TỪNG VÒNG</div>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>{KO_ROUND_LABELS.map((n) => <div key={n}>{boRound(n)}</div>)}</div>
+            <div style={{ fontSize: 12, color: "#9ca8ce", marginTop: 2 }}>{boNote}</div>
+          </div>
+        )}
+        {type === "swiss" && <div style={{ fontSize: 12, color: "#b9c3e6", marginTop: 4 }}>Số lượt = {2 * (Number(cfg.wins_to_advance) || 2) - 1} (suy ra từ số thắng để đi tiếp).</div>}
       </Card>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -118,7 +154,7 @@ export default function FormatsClient({ tournaments, tournamentId, clusters, clu
               {ef.type === "group" && <>{efNum("advance_per_group", "Top mỗi bảng")}{efNum("best_of", "Chạm")}</>}
               {ef.type === "swiss" && <>{efNum("wins_to_advance", "Thắng đi tiếp")}{efNum("best_of", "Chạm")}</>}
               {ef.type === "knockout_single" && <>
-                {efNum("best_of", "Chạm")}{efNum("final_best_of", "CK chạm")}
+                {efNum("best_of", "Chạm mặc định")}
                 <Field label="Tranh 3–4">
                   <Select value={String(ef.cfg.third_place)} onChange={(e) => setEf({ ...ef, cfg: { ...ef.cfg, third_place: e.target.value === "true" } })} style={{ width: 90 }}>
                     <option value="true">Có</option><option value="false">Không</option>
@@ -133,7 +169,14 @@ export default function FormatsClient({ tournaments, tournamentId, clusters, clu
                 </div>
               </Field>
             </div>
-            <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#9aaad8", marginTop: 8 }}>{TYPE_LABEL[r.round_type]} — loại vòng không thay đổi được sau khi tạo</div>
+            {ef.type === "knockout_single" && (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6", letterSpacing: 1, marginBottom: 8 }}>SỐ CHẠM TỪNG VÒNG</div>
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>{KO_ROUND_LABELS.map((n) => <div key={n}>{efBoRound(n)}</div>)}</div>
+                <div style={{ fontSize: 12, color: "#9ca8ce", marginTop: 2 }}>{boNote}</div>
+              </div>
+            )}
+            <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6", marginTop: 8 }}>{TYPE_LABEL[r.round_type]} — loại vòng không thay đổi được sau khi tạo</div>
           </Card>
         ) : (
           <Card key={r.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
@@ -141,7 +184,7 @@ export default function FormatsClient({ tournaments, tournamentId, clusters, clu
               <span style={{ fontFamily: FONT_SAIRA, fontStyle: "italic", fontWeight: 800, fontSize: 22, color: "#5db6ff", minWidth: 26 }}>{r.order_no}</span>
               <div>
                 <div style={{ fontFamily: FONT_SAIRA, fontWeight: 700, fontSize: 18, textTransform: "uppercase" }}>{r.name}</div>
-                <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#9aaad8", marginTop: 3 }}>{TYPE_LABEL[r.round_type]} · {JSON.stringify(r.config)}</div>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6", marginTop: 3 }}>{TYPE_LABEL[r.round_type]} · {JSON.stringify(r.config)}</div>
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -155,7 +198,7 @@ export default function FormatsClient({ tournaments, tournamentId, clusters, clu
             </div>
           </Card>
         ))}
-        {rounds.length === 0 && <div style={{ color: "#9aaad8", fontFamily: FONT_MONO, fontSize: 13 }}>Chưa có vòng nào. Áp thể thức mẫu hoặc thêm vòng thủ công.</div>}
+        {rounds.length === 0 && <div style={{ color: "#b9c3e6", fontFamily: FONT_MONO, fontSize: 13 }}>Chưa có vòng nào. Áp thể thức mẫu hoặc thêm vòng thủ công.</div>}
       </div>
       <Toast message={msg} />
     </div>

@@ -128,6 +128,24 @@ export const KO_ROUND_NAMES: Record<number, string> = {
   64: "Vòng 1/32",
 };
 
+/** Standard knockout round labels, biggest stage first — for per-round config UI. */
+export const KO_ROUND_LABELS = ["Chung kết", "Bán kết", "Tứ kết", "Vòng 1/8", "Vòng 1/16", "Vòng 1/32"];
+
+/**
+ * Effective "first to N" (best_of / số chạm) for a match, given its round config
+ * and leg name. Priority: per-round override (config.best_of_by_round[legName])
+ * → legacy final_best_of for the final → the default config.best_of.
+ */
+export function effectiveBestOf(config: Record<string, unknown> | null | undefined, legName: string | null | undefined): number {
+  if (!config) return 0;
+  const byRound = config.best_of_by_round as Record<string, number> | undefined;
+  if (legName && byRound && typeof byRound[legName] === "number" && byRound[legName] > 0) return byRound[legName];
+  if (legName && /chung kết/i.test(legName) && typeof config.final_best_of === "number" && (config.final_best_of as number) > 0) {
+    return config.final_best_of as number;
+  }
+  return typeof config.best_of === "number" ? (config.best_of as number) : 0;
+}
+
 /** Names for each bracket depth given the first-round player count (power of two). */
 export function bracketLegNames(playerCount: number): string[] {
   const names: string[] = [];

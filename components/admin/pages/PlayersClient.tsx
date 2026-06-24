@@ -71,19 +71,19 @@ export default function PlayersClient({ tournaments, tournamentId, clusters, clu
       </div>
 
       <Card style={{ padding: 0, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1.2fr 1fr auto", gap: 0, padding: "10px 16px", background: "rgba(93,182,255,.06)", fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 1, color: "#9aaad8" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1.2fr 1fr auto", gap: 0, padding: "10px 16px", background: "rgba(93,182,255,.06)", fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 1, color: "#b9c3e6" }}>
           <span>HỌ TÊN / NICKNAME</span><span>SĐT</span><span>CCCD</span><span>ĐỊA CHỈ</span><span></span>
         </div>
         {players.map((p) => (
           <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1.2fr 1fr auto", gap: 0, padding: "10px 16px", alignItems: "center", borderTop: "1px solid rgba(93,182,255,.08)", fontSize: 13 }}>
             <div><div style={{ fontFamily: FONT_SAIRA, fontWeight: 700, fontSize: 15 }}>{p.full_name}</div>{p.aoe_nickname && <div style={{ fontFamily: FONT_SAIRA, fontWeight: 500, fontSize: 12, color: "#9bd8ff" }}>{p.aoe_nickname}</div>}</div>
             <span style={{ color: "#aab6e0" }}>{p.phone}</span>
-            <span style={{ color: "#9aaad8", fontFamily: FONT_MONO, fontSize: 12 }}>{p.citizen_id || "—"}</span>
-            <span style={{ color: "#9aaad8", fontSize: 12 }}>{p.address || "—"}</span>
+            <span style={{ color: "#b9c3e6", fontFamily: FONT_MONO, fontSize: 12 }}>{p.citizen_id || "—"}</span>
+            <span style={{ color: "#b9c3e6", fontSize: 12 }}>{p.address || "—"}</span>
             <button onClick={() => del(p.id, p.aoe_nickname || p.full_name)} style={{ color: "#ff8fa8", background: "transparent", border: "1px solid #4a2230", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 11 }}>Xóa</button>
           </div>
         ))}
-        {players.length === 0 && <div style={{ padding: 24, color: "#9aaad8", fontFamily: FONT_MONO, fontSize: 13, textAlign: "center" }}>Chưa có game thủ. Thêm tay hoặc nhập Excel.</div>}
+        {players.length === 0 && <div style={{ padding: 24, color: "#b9c3e6", fontFamily: FONT_MONO, fontSize: 13, textAlign: "center" }}>Chưa có game thủ. Thêm tay hoặc nhập Excel.</div>}
       </Card>
       <Toast message={msg} />
     </div>
