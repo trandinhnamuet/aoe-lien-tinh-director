@@ -52,7 +52,7 @@ export default function PlayersClient({ tournaments, tournamentId, clusters, clu
       } />
 
       <Card style={{ marginBottom: 16 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px,1fr))", gap: 12, alignItems: "end" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 150px), 1fr))", gap: 12, alignItems: "end" }}>
           <Field label="Họ tên *"><Input value={f.full_name} onChange={set("full_name")} placeholder="Nguyễn Văn A" /></Field>
           <Field label="SĐT *"><Input value={f.phone} onChange={set("phone")} placeholder="09xxxxxxxx" /></Field>
           <Field label="Nickname AoE"><Input value={f.aoe_nickname} onChange={set("aoe_nickname")} /></Field>

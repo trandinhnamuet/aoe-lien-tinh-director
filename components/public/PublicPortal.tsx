@@ -123,7 +123,7 @@ export default function PublicPortal({ initial }: { initial: ClusterSnapshot }) 
       <div style={{ position: "relative", zIndex: 10 }}>
         {/* HEADER */}
         <header style={{ position: "sticky", top: 0, zIndex: 40, backdropFilter: "blur(14px)", background: "linear-gradient(180deg, rgba(10,14,40,.92), rgba(10,14,40,.74))", borderBottom: "1px solid rgba(93,182,255,.18)" }}>
-          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "14px 24px", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+          <div className="pub-pad" style={{ maxWidth: 1280, margin: "0 auto", padding: "14px 24px", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span style={{ width: 40, height: 40, borderRadius: 9, background: "linear-gradient(150deg,#9bd8ff,#3f7fe0)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_SAIRA, fontStyle: "italic", fontWeight: 800, color: "#0a1c44", fontSize: 22, boxShadow: "0 0 18px rgba(93,182,255,.5)" }}>A</span>
               <div>
@@ -167,7 +167,7 @@ export default function PublicPortal({ initial }: { initial: ClusterSnapshot }) 
           </div>
 
           {/* tabs */}
-          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", display: "flex", gap: 4, overflowX: "auto" }}>
+          <div className="pub-pad" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", display: "flex", gap: 4, overflowX: "auto" }}>
             <Tab label="Tổng quan" active={route === "dashboard"} onClick={() => setRoute("dashboard")} />
             {snap.rounds.map((r) => (
               <Tab key={r.id} label={r.name} active={route === r.id} onClick={() => setRoute(r.id)} />
@@ -175,7 +175,7 @@ export default function PublicPortal({ initial }: { initial: ClusterSnapshot }) 
           </div>
         </header>
 
-        <main style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 24px 80px" }}>
+        <main className="pub-pad" style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 24px 80px" }}>
           {route === "dashboard" && <Dashboard snap={snap} flash={flash} onOpenRound={(id) => setRoute(id)} />}
           {activeRound?.type === "group" && <GroupsView round={activeRound} />}
           {activeRound?.type === "swiss" && <SwissView round={activeRound} />}
@@ -234,7 +234,7 @@ function Dashboard({ snap, flash, onOpenRound }: { snap: ClusterSnapshot; flash:
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 300px), 1fr))", gap: 14 }}>
         {cards.map((c, i) => (
           <div key={c.id} style={{ animation: `cardIn .55s ${Math.min(i * 0.05, 0.5)}s both` }}>
             <MatchCard {...c} flashKey={flash[c.id] || 0} />
@@ -257,7 +257,7 @@ function Dashboard({ snap, flash, onOpenRound }: { snap: ClusterSnapshot; flash:
 
 function GroupsView({ round }: { round: Extract<RoundSnapshot, { type: "group" }> }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(330px, 1fr))", gap: 18 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 330px), 1fr))", gap: 18 }}>
       {round.groups.map((g: GroupVM) => <GroupCard key={g.key} g={g} />)}
     </div>
   );
@@ -340,7 +340,7 @@ function SwissView({ round }: { round: Extract<RoundSnapshot, { type: "swiss" }>
       {round.legs.map((leg: SwissLegVM) => (
         <div key={leg.name} style={{ marginBottom: 26 }}>
           <div style={{ fontFamily: FONT_SAIRA, fontWeight: 800, fontStyle: "italic", fontSize: 22, textTransform: "uppercase", marginBottom: 12 }}>{leg.name}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 360px), 1fr))", gap: 12 }}>
             {leg.matches.map((m) => {
               const done = m.status === "done", live = m.status === "live";
               const rowStyle: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 14, alignItems: "center", padding: "12px 16px", borderRadius: 10,

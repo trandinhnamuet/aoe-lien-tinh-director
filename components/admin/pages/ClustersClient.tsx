@@ -66,7 +66,7 @@ export default function ClustersClient({ tournaments, clusters, tournamentId, cu
       } />
 
       <Card style={{ marginBottom: 22 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1.6fr 1fr auto", gap: 12, alignItems: "end" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 12, alignItems: "end" }}>
           <Field label="Tên cụm"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Cụm Hà Nội" /></Field>
           <Field label="Địa điểm"><Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="GG Center Cầu Giấy" /></Field>
           <Field label="Ngày thi đấu"><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
@@ -74,7 +74,7 @@ export default function ClustersClient({ tournaments, clusters, tournamentId, cu
         </div>
       </Card>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px,1fr))", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))", gap: 14 }}>
         {clusters.map((c) => {
           const isCurrent = c.id === currentClusterId;
           if (editId === c.id) {

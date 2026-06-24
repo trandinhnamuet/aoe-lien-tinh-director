@@ -18,8 +18,17 @@ body {
 ::-webkit-scrollbar-thumb { background: #2c3470; border-radius: 6px; }
 ::-webkit-scrollbar-track { background: #0a0e24; }
 
-button { font-family: inherit; }
-a { color: inherit; }
+/* Buttons & links: subtle, consistent hover/press feedback across the app. */
+button { font-family: inherit; transition: filter .15s ease, transform .08s ease, background .15s ease, box-shadow .2s ease, opacity .15s ease; }
+a { color: inherit; transition: filter .15s ease, opacity .15s ease; }
+button:not(:disabled), a, [role="button"] { cursor: pointer; }
+button:not(:disabled):hover, a:hover, [role="button"]:hover { filter: brightness(1.13); }
+button:not(:disabled):active, [role="button"]:active { transform: translateY(1px); }
+button:disabled { cursor: not-allowed; }
+/* Primary shared buttons get a gentle lift for a more polished feel. */
+.aoe-btn:not(:disabled):hover { filter: brightness(1.08); transform: translateY(-1px); }
+.aoe-btn:not(:disabled):active { transform: translateY(0); }
+@media (hover: none) { button:hover, a:hover, [role="button"]:hover, .aoe-btn:not(:disabled):hover { filter: none; transform: none; } }
 
 /* Native dropdowns: keep option list dark so light text stays readable. */
 select { color: #f0f4ff; }
@@ -68,4 +77,39 @@ option { background-color: #0e1336; color: #f0f4ff; }
 }
 .bkp-round:not(:last-child) .bkp-match:nth-child(even)::after {
   top: 0; bottom: 50%; border-bottom: 2px solid rgba(93,182,255,.4);
+}
+
+/* ---- Admin shell (responsive: fixed sidebar on desktop, drawer on mobile) ---- */
+.admin-shell { min-height: 100vh; display: flex; background: #080b1e; color: #f0f4ff; }
+.admin-sidebar { width: 248px; flex: none; background: #0b0f28; border-right: 1px solid rgba(93,182,255,.14); padding: 20px 14px; position: sticky; top: 0; height: 100vh; overflow-y: auto; z-index: 50; }
+.admin-main { flex: 1; min-width: 0; padding: 28px 28px 80px; }
+.admin-hamburger { display: none; }
+.admin-backdrop { display: none; }
+
+@media (max-width: 860px) {
+  /* On phones/tablets the 1.15 zoom + fixed sidebar would crowd the screen. */
+  body { zoom: 1; }
+  .admin-sidebar {
+    position: fixed; left: 0; top: 0; height: 100dvh;
+    transform: translateX(-100%); transition: transform .25s ease;
+    box-shadow: 0 0 40px rgba(0,0,0,.6);
+  }
+  .admin-shell.nav-open .admin-sidebar { transform: translateX(0); }
+  .admin-hamburger {
+    display: flex; align-items: center; justify-content: center;
+    position: fixed; top: 12px; left: 12px; z-index: 60;
+    width: 46px; height: 46px; border-radius: 12px; font-size: 20px;
+    background: linear-gradient(150deg, #9bd8ff, #5db6ff); color: #0a1c44;
+    border: none; box-shadow: 0 6px 20px rgba(93,182,255,.45);
+  }
+  .admin-shell.nav-open .admin-backdrop {
+    display: block; position: fixed; inset: 0; z-index: 45;
+    background: rgba(4, 6, 16, .62); backdrop-filter: blur(2px);
+  }
+  .admin-main { padding: 66px 14px 60px; }
+}
+
+/* ---- Phone-friendly spacing for the public portal ---- */
+@media (max-width: 640px) {
+  .pub-pad { padding-left: 14px !important; padding-right: 14px !important; }
 }

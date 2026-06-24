@@ -171,11 +171,11 @@ function LegSection({ sub, matches, total, doneCount, onSaved, onError }: {
         <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#9bd8ff", letterSpacing: 1, flex: 1 }}>{label.toUpperCase()}</span>
         <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: allDone ? "#5db6ff" : "#b9c3e6" }}>{allDone ? "✓ " : ""}{doneCount}/{total} xong</span>
       </button>
-      {open && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px,1fr))", gap: 10 }}>
-          {matches.map((m) => <MatchEditor key={m.id} m={m} onSaved={onSaved} onError={onError} />)}
-        </div>
-      )}
+      {/* Keep editors mounted (just hidden) when collapsed, so in-flight edits
+          aren't lost / reset to stale server values on collapse → expand. */}
+      <div style={{ display: open ? "grid" : "none", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 420px), 1fr))", gap: 10 }}>
+        {matches.map((m) => <MatchEditor key={m.id} m={m} onSaved={onSaved} onError={onError} />)}
+      </div>
     </div>
   );
 }
@@ -241,7 +241,12 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
   }
 
   const live = status === "live", done = status === "done";
-  const border = live ? "1px solid rgba(93,182,255,.45)" : done ? "1px solid #242c64" : "1px dashed #2c3470";
+  // Done matches turn green so admins can see at a glance what already has a result.
+  const cardStyle: React.CSSProperties = done
+    ? { background: "linear-gradient(135deg, rgba(52,199,108,.28), rgba(52,199,108,.06) 72%)", border: "1px solid #34c76c", boxShadow: "0 0 14px rgba(52,199,108,.3)" }
+    : live
+    ? { background: "rgba(93,182,255,.06)", border: "1px solid rgba(93,182,255,.45)" }
+    : { background: "rgba(255,255,255,.03)", border: "1px dashed #2c3470" };
   // Once either side reaches the cap the match is decided — lock BOTH + buttons
   // so a misclick can't push it to e.g. 2–2 with no clear winner.
   const decided = s1 >= bestOf || s2 >= bestOf;
@@ -269,7 +274,7 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
   );
 
   return (
-    <div style={{ background: "rgba(255,255,255,.03)", border, borderRadius: 11, padding: "12px 14px" }}>
+    <div style={{ ...cardStyle, borderRadius: 11, padding: "12px 14px" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {playerRow(m.an_full, m.an, String(m1), (s) => setM1(s), s1, decS1, incS1)}
         <div style={{ height: 1, background: "rgba(93,182,255,.1)" }} />

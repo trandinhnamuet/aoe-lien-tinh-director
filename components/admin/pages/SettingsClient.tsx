@@ -20,7 +20,7 @@ export default function SettingsClient({ settings, tournaments, clusters }: { se
   return (
     <div>
       <PageTitle title="Cài đặt" sub="A9 · TÙY CHỈNH HỆ THỐNG" />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px,1fr))", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))", gap: 16 }}>
         <Card>
           <div style={{ fontFamily: FONT_SAIRA, fontWeight: 700, fontSize: 18, textTransform: "uppercase", marginBottom: 6 }}>Kiểm tra trùng CCCD</div>
           <div style={{ fontSize: 12, color: "#aab6e0", marginBottom: 14 }}>Khi bật, không cho thêm game thủ có CCCD trùng trong cùng cụm. Mặc định tắt.</div>

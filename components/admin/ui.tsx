@@ -8,12 +8,12 @@ export const FONT_MONO = "'IBM Plex Mono',monospace";
 type BtnKind = "primary" | "secondary" | "ghost" | "danger";
 
 export function Btn({
-  kind = "secondary", children, style, ...rest
+  kind = "secondary", children, style, className, ...rest
 }: { kind?: BtnKind } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const base: React.CSSProperties = {
     fontFamily: FONT_SAIRA, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".5px",
     fontSize: 14, padding: "9px 16px", borderRadius: 10, cursor: "pointer", border: "1px solid transparent",
-    transition: "filter .15s, background .15s", whiteSpace: "nowrap",
+    transition: "filter .15s, background .15s, transform .08s, box-shadow .2s", whiteSpace: "nowrap",
   };
   const kinds: Record<BtnKind, React.CSSProperties> = {
     primary: { background: "linear-gradient(150deg,#9bd8ff,#5db6ff)", color: "#0a1c44", boxShadow: "0 6px 20px rgba(93,182,255,.35)" },
@@ -22,7 +22,7 @@ export function Btn({
     danger: { background: "transparent", border: "1px solid #4a2230", color: "#ff8fa8" },
   };
   return (
-    <button {...rest} style={{ ...base, ...kinds[kind], ...(rest.disabled ? { opacity: 0.5, cursor: "not-allowed" } : {}), ...style }}>
+    <button {...rest} className={`aoe-btn${className ? ` ${className}` : ""}`} style={{ ...base, ...kinds[kind], ...(rest.disabled ? { opacity: 0.5, cursor: "not-allowed" } : {}), ...style }}>
       {children}
     </button>
   );

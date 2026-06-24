@@ -46,7 +46,7 @@ export default function TournamentsClient({ tournaments, currentTournamentId }: 
     <div>
       <PageTitle title="Giải đấu tổng" sub="A3 · TẠO & QUẢN LÝ GIẢI ĐẤU" />
       <Card style={{ marginBottom: 22 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1.5fr auto", gap: 12, alignItems: "end" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 12, alignItems: "end" }}>
           <Field label="Tên giải"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="AoE Liên Tỉnh" /></Field>
           <Field label="Năm"><Input type="number" value={year} onChange={(e) => setYear(+e.target.value)} /></Field>
           <Field label="Đơn vị tổ chức"><Input value={organizer} onChange={(e) => setOrganizer(e.target.value)} /></Field>
@@ -54,7 +54,7 @@ export default function TournamentsClient({ tournaments, currentTournamentId }: 
         </div>
       </Card>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px,1fr))", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))", gap: 14 }}>
         {tournaments.map((t) => { const isCurrent = t.id === currentTournamentId; return (
           <Card key={t.id} style={isCurrent ? { border: "1px solid rgba(93,182,255,.5)" } : undefined}>
             {editId === t.id ? (

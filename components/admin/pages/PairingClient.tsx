@@ -106,7 +106,7 @@ export default function PairingClient({ tournaments, tournamentId, clusters, clu
             <Btn kind="primary" onClick={saveParticipants} disabled={busy} style={{ fontSize: 12, padding: "6px 12px" }}>Lưu danh sách</Btn>
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px,1fr))", gap: 6 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 180px), 1fr))", gap: 6 }}>
           {visiblePlayers.map((p) => (
             <label key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", borderRadius: 8, cursor: "pointer", background: checked.has(p.id) ? "rgba(93,182,255,.1)" : "rgba(255,255,255,.02)", border: `1px solid ${checked.has(p.id) ? "rgba(93,182,255,.3)" : "transparent"}` }}>
               <input type="checkbox" checked={checked.has(p.id)} onChange={() => toggle(p.id)} />
@@ -143,7 +143,7 @@ export default function PairingClient({ tournaments, tournamentId, clusters, clu
                   }}>✓ Chốt chia bảng</Btn>}
                 </div>
                 {groupPreview && (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px,1fr))", gap: 10 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 200px), 1fr))", gap: 10 }}>
                     {groupPreview.map((ids, i) => (
                       <div key={i} style={{ background: "rgba(255,255,255,.03)", border: "1px solid rgba(93,182,255,.16)", borderRadius: 10, padding: 12, animation: "shuffle .4s" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
@@ -203,7 +203,7 @@ export default function PairingClient({ tournaments, tournamentId, clusters, clu
               }}>✓ Chốt cặp đấu</Btn>}
             </div>
             {pairPreview && (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px,1fr))", gap: 8 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))", gap: 8 }}>
                 {pairPreview.map(([a, b], i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255,255,255,.03)", border: "1px solid rgba(93,182,255,.16)", borderRadius: 8, padding: "8px 12px", animation: "shuffle .4s" }}>
                     {(() => { const pa = nameOf.get(a); return (
