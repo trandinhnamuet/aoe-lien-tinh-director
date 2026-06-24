@@ -1,11 +1,11 @@
 // Shared connection helper for migration/seed scripts.
-// Loads DATABASE_URL from .env.local (Node scripts don't auto-load it).
+// Loads env from .env.local (Node scripts don't auto-load it) and prefers
+// DIRECT_URL (session-mode pooler / direct) for DDL — falling back to DATABASE_URL.
 import fs from "node:fs";
 import path from "node:path";
 import postgres from "postgres";
 
 function loadEnv() {
-  if (process.env.DATABASE_URL) return;
   const envPath = path.join(process.cwd(), ".env.local");
   if (!fs.existsSync(envPath)) return;
   const txt = fs.readFileSync(envPath, "utf8");
@@ -22,12 +22,13 @@ function loadEnv() {
 
 loadEnv();
 
-if (!process.env.DATABASE_URL) {
-  console.error("Missing DATABASE_URL (set it in .env.local)");
+const url = process.env.DIRECT_URL || process.env.DATABASE_URL;
+if (!url) {
+  console.error("Missing DIRECT_URL / DATABASE_URL (set it in .env.local)");
   process.exit(1);
 }
 
-export const sql = postgres(process.env.DATABASE_URL, {
+export const sql = postgres(url, {
   ssl: "require",
   prepare: false,
   max: 1,
