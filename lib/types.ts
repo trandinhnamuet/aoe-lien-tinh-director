@@ -89,6 +89,7 @@ export interface GroupStandingRow {
   fullName: string;    // primary display
   nick: string;        // secondary if ≠ fullName
   machine: number | null;
+  points: number;
   win: number;
   loss: number;
   draw: number;

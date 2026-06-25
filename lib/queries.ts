@@ -171,7 +171,7 @@ export async function getClusterSnapshot(clusterId: string): Promise<ClusterSnap
             playerId: row.pid, rank: row.rank,
             fullName: fullNameMap.get(row.pid) ?? "—",
             nick: nick.get(row.pid) ?? "—",
-            machine: mach.get(row.pid) ?? null, win: row.win, loss: row.loss, draw: row.draw, diff: row.diff, advance: row.advance,
+            machine: mach.get(row.pid) ?? null, points: row.points, win: row.win, loss: row.loss, draw: row.draw, diff: row.diff, advance: row.advance,
           })),
           matches: gm.map((m) => {
             const done = m.status === "done", live = m.status === "live";

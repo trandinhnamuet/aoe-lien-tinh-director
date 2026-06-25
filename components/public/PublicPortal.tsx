@@ -265,8 +265,8 @@ function GroupsView({ round }: { round: Extract<RoundSnapshot, { type: "group" }
 
 function GroupCard({ g }: { g: GroupVM }) {
   const [open, setOpen] = useState(false); // match list collapsed by default
-  // Columns: # | player | advance-badge | T(win) | B(loss) | [H(draw)] | +/-(diff)
-  const cols = `26px 1fr auto 28px 28px ${g.showDraw ? "28px " : ""}40px`;
+  // Columns: # | player | advance-badge | Đ(points) | T(win) | B(loss) | [H(draw)] | +/-(diff)
+  const cols = `26px 1fr auto 34px 28px 28px ${g.showDraw ? "28px " : ""}40px`;
   const numCell: React.CSSProperties = { fontFamily: FONT_MONO, fontSize: 13, textAlign: "center" };
   return (
     <div style={{ background: "rgba(255,255,255,.03)", border: "1px solid rgba(93,182,255,.16)", borderRadius: 14, padding: 18, animation: "cardIn .5s both" }}>
@@ -276,10 +276,11 @@ function GroupCard({ g }: { g: GroupVM }) {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: cols, gap: 8, padding: "0 10px 6px", fontFamily: FONT_MONO, fontSize: 10, color: "#b9c3e6", letterSpacing: 1 }}>
         <span>#</span><span>NGƯỜI CHƠI</span><span></span>
+        <span style={{ textAlign: "center", color: "#bfe2ff" }} title="Điểm (thắng +3)">Đ</span>
         <span style={{ textAlign: "center" }} title="Thắng">T</span>
         <span style={{ textAlign: "center" }} title="Thua">B</span>
         {g.showDraw && <span style={{ textAlign: "center" }} title="Hòa">H</span>}
-        <span style={{ textAlign: "center" }} title="Hiệu số">+/-</span>
+        <span style={{ textAlign: "center" }} title="Hệ số (hiệu số trận)">+/-</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
         {g.rows.map((r) => (
@@ -291,6 +292,7 @@ function GroupCard({ g }: { g: GroupVM }) {
               <div style={{ fontFamily: FONT_MONO, fontSize: 9, color: "#b9c3e6" }}>{mach(r.machine)}</div>
             </div>
             {r.advance ? <span style={{ fontFamily: FONT_MONO, fontSize: 8, color: "#bfe2ff", border: "1px solid rgba(93,182,255,.45)", padding: "1px 5px", borderRadius: 4 }}>ĐI TIẾP</span> : <span />}
+            <span style={{ ...numCell, fontSize: 16, fontWeight: 800, color: "#bfe2ff" }}>{r.points}</span>
             <span style={{ ...numCell, fontSize: 14, color: "#e8eeff" }}>{r.win}</span>
             <span style={{ ...numCell, color: "#ff9db0" }}>{r.loss}</span>
             {g.showDraw && <span style={{ ...numCell, color: "#b9c3e6" }}>{r.draw}</span>}
