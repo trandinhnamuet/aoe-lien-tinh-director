@@ -257,8 +257,47 @@ function Dashboard({ snap, flash, onOpenRound }: { snap: ClusterSnapshot; flash:
 
 function GroupsView({ round }: { round: Extract<RoundSnapshot, { type: "group" }> }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 330px), 1fr))", gap: 18 }}>
-      {round.groups.map((g: GroupVM) => <GroupCard key={g.key} g={g} />)}
+    <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+        <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6", letterSpacing: 1 }}>{round.configText}</span>
+        <FormatInfo configText={round.configText} />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 330px), 1fr))", gap: 18 }}>
+        {round.groups.map((g: GroupVM) => <GroupCard key={g.key} g={g} />)}
+      </div>
+    </div>
+  );
+}
+
+/** (i) button — hover (or tap) to read the full group-stage format + ranking rules. */
+function FormatInfo({ configText }: { configText: string }) {
+  const [open, setOpen] = useState(false);
+  const head: React.CSSProperties = { color: "#9bd8ff", fontWeight: 700 };
+  const para: React.CSSProperties = { marginBottom: 8 };
+  return (
+    <div style={{ position: "relative", display: "inline-flex" }}
+      onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button onClick={() => setOpen((v) => !v)} aria-label="Thông tin thể thức vòng bảng"
+        style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid rgba(93,182,255,.5)", background: "rgba(93,182,255,.12)", color: "#9bd8ff", fontFamily: FONT_SAIRA, fontWeight: 800, fontStyle: "italic", fontSize: 14, lineHeight: 1, cursor: "pointer" }}>i</button>
+      {open && (
+        <div style={{ position: "absolute", top: 32, left: 0, zIndex: 50, width: 380, maxWidth: "88vw", background: "#0e1336", border: "1px solid rgba(93,182,255,.4)", borderRadius: 12, padding: "16px 18px", boxShadow: "0 18px 50px rgba(0,0,0,.55)", textAlign: "left" }}>
+          <div style={{ fontFamily: FONT_SAIRA, fontWeight: 800, fontStyle: "italic", fontSize: 18, textTransform: "uppercase", marginBottom: 10 }}>Thể thức vòng bảng</div>
+          <div style={{ fontSize: 13, lineHeight: 1.6, color: "#dbe4ff" }}>
+            <div style={para}><span style={head}>Cách đấu:</span> chia thành các bảng đấu vòng tròn (ai cũng gặp mọi người trong bảng). Mỗi cặp đánh kiểu &quot;chạm&quot; — ai đạt đủ số ván trước thì thắng, nên <b>luôn có người thắng, không có hòa</b>. Thắng một cặp được <b>+3 điểm</b>.</div>
+            <div style={para}><span style={head}>Chia bảng:</span> số bảng là lũy thừa của 2 (1, 2, 4, 8…), mỗi bảng 3–6 người, chia đều sao cho bảng đông nhất và ít nhất chênh nhau không quá 1 người. Bốc thăm ngẫu nhiên.</div>
+            <div style={para}><span style={head}>Đi tiếp:</span> số game thủ đứng đầu mỗi bảng (theo cấu hình) vào vòng sau — gắn nhãn <b>ĐI TIẾP</b>.</div>
+            <div style={{ marginBottom: 4 }}><span style={head}>Thứ tự xếp hạng</span> (ưu tiên từ trên xuống):</div>
+            <ol style={{ margin: 0, paddingLeft: 18 }}>
+              <li><b>Điểm</b> (Đ) — thắng +3</li>
+              <li><b>Hiệu số</b> toàn bảng (HS = tổng ván thắng − thua)</li>
+              <li><b>Đối đầu trực tiếp</b> giữa những người đang đồng hạng (số trận thắng nội bộ)</li>
+              <li><b>Hiệu số ván</b> trong chính các trận đối đầu nội bộ đó</li>
+              <li><b>Tổng thời gian các ván thắng</b> — ít hơn xếp trên (nếu có nhập)</li>
+            </ol>
+            <div style={{ marginTop: 10, fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6" }}>Cấu hình vòng này: {configText}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
