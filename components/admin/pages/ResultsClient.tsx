@@ -192,6 +192,7 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
   const [p1Times, setP1Times] = useState<string[]>(() => initTimes(m.game_durations?.p1, m.player1_score));
   const [p2Times, setP2Times] = useState<string[]>(() => initTimes(m.game_durations?.p2, m.player2_score));
   const [busy, setBusy] = useState(false);
+  const [showTimes, setShowTimes] = useState(false); // per-game time section hidden by default
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const isGroup = m.round_type === "group";
 
@@ -291,7 +292,7 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
         {playerRow(m.bn_full, m.bn, String(m2), (s) => setM2(s), s2, decS2, incS2)}
       </div>
 
-      {isGroup && s1 + s2 > 0 && (
+      {isGroup && showTimes && s1 + s2 > 0 && (
         <div style={{ marginTop: 10, padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,.03)", border: "1px solid #2c3470" }}>
           <div style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 1, color: "#b9c3e6", marginBottom: 6 }}>⏱ THỜI GIAN TỪNG VÁN THẮNG (mm:ss)</div>
           {([[m.an_full ?? m.an, p1Times, "p1"], [m.bn_full ?? m.bn, p2Times, "p2"]] as const).map(([name, times, side]) => (
@@ -314,6 +315,12 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
           <option value="live">Đang đánh</option>
           <option value="done">Xong</option>
         </Select>
+        {isGroup && s1 + s2 > 0 && (
+          <button onClick={() => setShowTimes((v) => !v)} title="Nhập thời gian từng ván thắng (dùng khi cần phân định đồng hạng)"
+            style={{ fontFamily: FONT_MONO, fontSize: 11, padding: "5px 9px", borderRadius: 6, cursor: "pointer", background: showTimes ? "rgba(93,182,255,.14)" : "transparent", border: "1px solid #2c3470", color: "#9bd8ff" }}>
+            ⏱ {showTimes ? "Ẩn giờ" : "Nhập giờ ván"}
+          </button>
+        )}
         {busy && <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6", marginLeft: 4 }}>Đang lưu…</span>}
         {bestOf < 99 && <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: "#b9c3e6", marginLeft: "auto" }}>best of {bestOf}</span>}
       </div>
