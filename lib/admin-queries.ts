@@ -71,6 +71,7 @@ export interface AdminMatch {
   player1_id: string | null; player2_id: string | null;
   player1_machine: number | null; player2_machine: number | null;
   player1_score: number; player2_score: number; status: MatchStatus; is_bye: boolean; sort_order: number; duration_seconds: number | null;
+  game_durations: { p1?: (number | null)[]; p2?: (number | null)[] } | null;
   an: string | null;
   an_full: string | null;
   bn: string | null;
@@ -82,7 +83,7 @@ export interface AdminMatch {
 export async function listClusterMatches(clusterId: string): Promise<AdminMatch[]> {
   return sql<AdminMatch[]>`
     select m.id, m.round_id, m.leg_id, m.group_id, m.player1_id, m.player2_id,
-      m.player1_machine, m.player2_machine, m.player1_score, m.player2_score, m.status, m.is_bye, m.sort_order, m.duration_seconds,
+      m.player1_machine, m.player2_machine, m.player1_score, m.player2_score, m.status, m.is_bye, m.sort_order, m.duration_seconds, m.game_durations,
       coalesce(pa.aoe_nickname, pa.full_name) as an, pa.full_name as an_full,
       coalesce(pb.aoe_nickname, pb.full_name) as bn, pb.full_name as bn_full,
       r.name as round_name, r.round_type, r.order_no, r.config as round_config, l.name as leg_name, g.name as group_name

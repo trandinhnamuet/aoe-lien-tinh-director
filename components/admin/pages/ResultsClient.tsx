@@ -188,7 +188,9 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
   const [status, setStatus] = useState<MatchStatus>(m.status);
   const [m1, setM1] = useState(m.player1_machine ?? "");
   const [m2, setM2] = useState(m.player2_machine ?? "");
-  const [dur, setDur] = useState(fmtTime(m.duration_seconds)); // mm:ss, group only
+  // Per-game (ván) win durations — group only. p1Times length tracks s1, p2Times s2.
+  const [p1Times, setP1Times] = useState<string[]>(() => initTimes(m.game_durations?.p1, m.player1_score));
+  const [p2Times, setP2Times] = useState<string[]>(() => initTimes(m.game_durations?.p2, m.player2_score));
   const [busy, setBusy] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const isGroup = m.round_type === "group";
@@ -199,13 +201,14 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
     return "pending";
   }
 
-  async function doSave(score1: number, score2: number, st: MatchStatus) {
+  async function doSave(score1: number, score2: number, st: MatchStatus, t1: string[] = p1Times, t2: string[] = p2Times) {
     setBusy(true);
     try {
+      const gameDurations = isGroup ? { p1: t1.map(parseTime), p2: t2.map(parseTime) } : null;
       const res = await fetch("/api/admin/results", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matchId: m.id, s1: score1, s2: score2, status: st, m1: m1 === "" ? null : +m1, m2: m2 === "" ? null : +m2, durationSeconds: parseTime(dur) }),
+        body: JSON.stringify({ matchId: m.id, s1: score1, s2: score2, status: st, m1: m1 === "" ? null : +m1, m2: m2 === "" ? null : +m2, gameDurations }),
       });
       const r = await res.json();
       if (r.ok) { setStatus(r.status); onSaved(m.id, r.status); } else onError(r.error || "Lỗi lưu");
@@ -216,31 +219,36 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
     }
   }
 
-  function schedSave(score1: number, score2: number, st: MatchStatus) {
+  function schedSave(score1: number, score2: number, st: MatchStatus, t1: string[], t2: string[]) {
     clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => void doSave(score1, score2, st), 250);
+    saveTimer.current = setTimeout(() => void doSave(score1, score2, st, t1, t2), 250);
   }
 
+  // +/- also grows/shrinks the per-game time inputs for that player.
   function incS1() {
     if (s1 >= bestOf || s2 >= bestOf) return;
-    const v = s1 + 1; const st = autoStatus(v, s2);
-    setS1(v); setStatus(st); schedSave(v, s2, st);
+    const v = s1 + 1, st = autoStatus(v, s2), t1 = [...p1Times, ""];
+    setS1(v); setP1Times(t1); setStatus(st); schedSave(v, s2, st, t1, p2Times);
   }
   function decS1() {
     if (s1 <= 0) return;
-    const v = s1 - 1; const st = autoStatus(v, s2);
-    setS1(v); setStatus(st); schedSave(v, s2, st);
+    const v = s1 - 1, st = autoStatus(v, s2), t1 = p1Times.slice(0, -1);
+    setS1(v); setP1Times(t1); setStatus(st); schedSave(v, s2, st, t1, p2Times);
   }
   function incS2() {
     if (s2 >= bestOf || s1 >= bestOf) return;
-    const v = s2 + 1; const st = autoStatus(s1, v);
-    setS2(v); setStatus(st); schedSave(s1, v, st);
+    const v = s2 + 1, st = autoStatus(s1, v), t2 = [...p2Times, ""];
+    setS2(v); setP2Times(t2); setStatus(st); schedSave(s1, v, st, p1Times, t2);
   }
   function decS2() {
     if (s2 <= 0) return;
-    const v = s2 - 1; const st = autoStatus(s1, v);
-    setS2(v); setStatus(st); schedSave(s1, v, st);
+    const v = s2 - 1, st = autoStatus(s1, v), t2 = p2Times.slice(0, -1);
+    setS2(v); setP2Times(t2); setStatus(st); schedSave(s1, v, st, p1Times, t2);
   }
+  const setGame = (side: "p1" | "p2", i: number, val: string) => {
+    if (side === "p1") setP1Times((prev) => prev.map((x, k) => (k === i ? val : x)));
+    else setP2Times((prev) => prev.map((x, k) => (k === i ? val : x)));
+  };
 
   const live = status === "live", done = status === "done";
   // Done matches turn green so admins can see at a glance what already has a result.
@@ -282,19 +290,30 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
         <div style={{ height: 1, background: "rgba(93,182,255,.1)" }} />
         {playerRow(m.bn_full, m.bn, String(m2), (s) => setM2(s), s2, decS2, incS2)}
       </div>
+
+      {isGroup && s1 + s2 > 0 && (
+        <div style={{ marginTop: 10, padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,.03)", border: "1px solid #2c3470" }}>
+          <div style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 1, color: "#b9c3e6", marginBottom: 6 }}>⏱ THỜI GIAN TỪNG VÁN THẮNG (mm:ss)</div>
+          {([[m.an_full ?? m.an, p1Times, "p1"], [m.bn_full ?? m.bn, p2Times, "p2"]] as const).map(([name, times, side]) => (
+            <div key={side} style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, marginTop: side === "p2" ? 6 : 0 }}>
+              <span style={{ flex: 1, minWidth: 0, fontFamily: FONT_SAIRA, fontWeight: 600, fontSize: 13, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name ?? "—"}</span>
+              {times.length === 0
+                ? <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#9ca8ce" }}>chưa thắng ván nào</span>
+                : times.map((t, i) => (
+                    <input key={i} value={t} onChange={(e) => setGame(side, i, e.target.value)} onBlur={() => void doSave(s1, s2, status)} placeholder="mm:ss" title={`Ván thắng #${i + 1}`}
+                      style={{ width: 52, padding: "3px 5px", borderRadius: 6, background: "rgba(255,255,255,.05)", border: "1px solid #2c3470", color: "#9bd8ff", fontFamily: FONT_MONO, fontSize: 11, textAlign: "center", outline: "none", flexShrink: 0 }} />
+                  ))}
+            </div>
+          ))}
+        </div>
+      )}
+
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
         <Select value={status} onChange={(e) => { const st = e.target.value as MatchStatus; setStatus(st); void doSave(s1, s2, st); }} style={{ width: "auto", padding: "6px 10px", fontSize: 12 }}>
           <option value="pending">Chờ</option>
           <option value="live">Đang đánh</option>
           <option value="done">Xong</option>
         </Select>
-        {isGroup && (
-          <label style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6" }} title="Thời gian trận đấu — tiêu chí phụ cuối khi đồng hạng. Nhập mm:ss (vd 32:10) hoặc số phút.">
-            ⏱
-            <input value={dur} onChange={(e) => setDur(e.target.value)} onBlur={() => void doSave(s1, s2, status)} placeholder="mm:ss"
-              style={{ width: 64, padding: "4px 6px", borderRadius: 6, background: "rgba(255,255,255,.05)", border: "1px solid #2c3470", color: "#9bd8ff", fontFamily: FONT_MONO, fontSize: 11, textAlign: "center", outline: "none" }} />
-          </label>
-        )}
         {busy && <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6", marginLeft: 4 }}>Đang lưu…</span>}
         {bestOf < 99 && <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: "#b9c3e6", marginLeft: "auto" }}>best of {bestOf}</span>}
       </div>
@@ -319,6 +338,10 @@ function fmtTime(sec: number | null | undefined): string {
   if (!sec || sec <= 0) return "";
   const m = Math.floor(sec / 60), s = sec % 60;
   return `${m}:${String(s).padStart(2, "0")}`;
+}
+/** Build n per-game time input strings from a stored seconds array. */
+function initTimes(arr: (number | null)[] | undefined, n: number): string[] {
+  return Array.from({ length: Math.max(0, n) }, (_, i) => fmtTime(arr?.[i] ?? null));
 }
 
 function stepBtnStyle(disabled: boolean): React.CSSProperties {

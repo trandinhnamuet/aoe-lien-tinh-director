@@ -12,6 +12,7 @@ interface MRow {
   player1_machine: number | null; player2_machine: number | null;
   player1_score: number; player2_score: number; winner_id: string | null;
   is_bye: boolean; status: MatchStatus; sort_order: number; duration_seconds: number | null;
+  game_durations: { p1?: (number | null)[]; p2?: (number | null)[] } | null;
   next_match_id: string | null; next_match_slot: number | null; loser_next_match_id: string | null;
   an: string | null;      // coalesce(nickname, full_name)
   bn: string | null;
@@ -55,7 +56,7 @@ function toMini(m: MRow): MiniMatch {
   return {
     player1_id: m.player1_id, player2_id: m.player2_id,
     player1_score: m.player1_score, player2_score: m.player2_score,
-    winner_id: m.winner_id, status: m.status, duration_seconds: m.duration_seconds,
+    winner_id: m.winner_id, status: m.status, duration_seconds: m.duration_seconds, game_durations: m.game_durations,
   };
 }
 
@@ -118,7 +119,7 @@ export async function getClusterSnapshot(clusterId: string): Promise<ClusterSnap
     sql<MRow[]>`
       select m.id, m.round_id, m.leg_id, m.group_id, m.player1_id, m.player2_id,
              m.player1_machine, m.player2_machine, m.player1_score, m.player2_score,
-             m.winner_id, m.is_bye, m.status, m.sort_order, m.duration_seconds,
+             m.winner_id, m.is_bye, m.status, m.sort_order, m.duration_seconds, m.game_durations,
              m.next_match_id, m.next_match_slot, m.loser_next_match_id,
              coalesce(pa.aoe_nickname, pa.full_name) as an, pa.full_name as an_full,
              coalesce(pb.aoe_nickname, pb.full_name) as bn, pb.full_name as bn_full

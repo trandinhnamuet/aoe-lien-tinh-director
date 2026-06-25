@@ -9,6 +9,7 @@ export interface MiniMatch {
   winner_id: string | null;
   status: string;
   duration_seconds?: number | null;
+  game_durations?: { p1?: (number | null)[]; p2?: (number | null)[] } | null;
 }
 
 export interface GroupRow {
@@ -18,7 +19,7 @@ export interface GroupRow {
   draw: number;
   points: number;  // win × 3 (+ draw × 1; "chạm" format has no draws)
   diff: number;    // hệ số: games/rounds won − lost (toàn bảng)
-  timeSec: number; // total duration of the player's matches (final tiebreaker)
+  timeSec: number; // total time of GAMES WON by the player (final tiebreaker)
   rank: number;
   advance: boolean;
 }
@@ -44,8 +45,10 @@ export function groupStandings(
     if (!a || !b) continue;
     a.diff += m.player1_score - m.player2_score;
     b.diff += m.player2_score - m.player1_score;
-    const t = m.duration_seconds ?? 0;
-    a.timeSec += t; b.timeSec += t;
+    // Tiebreaker time = sum of the durations of games each player WON.
+    const sum = (xs?: (number | null)[]) => (xs ?? []).reduce<number>((n, x) => n + (x ?? 0), 0);
+    a.timeSec += sum(m.game_durations?.p1);
+    b.timeSec += sum(m.game_durations?.p2);
     if (m.winner_id === m.player1_id) { a.win++; b.loss++; }
     else if (m.winner_id === m.player2_id) { b.win++; a.loss++; }
     else { a.draw++; b.draw++; } // "done" with no winner = draw (shouldn't happen in chạm)
