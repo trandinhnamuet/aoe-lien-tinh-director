@@ -188,8 +188,10 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
   const [status, setStatus] = useState<MatchStatus>(m.status);
   const [m1, setM1] = useState(m.player1_machine ?? "");
   const [m2, setM2] = useState(m.player2_machine ?? "");
+  const [dur, setDur] = useState(fmtTime(m.duration_seconds)); // mm:ss, group only
   const [busy, setBusy] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const isGroup = m.round_type === "group";
 
   function autoStatus(score1: number, score2: number): MatchStatus {
     if (score1 >= bestOf || score2 >= bestOf) return "done";
@@ -203,7 +205,7 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
       const res = await fetch("/api/admin/results", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matchId: m.id, s1: score1, s2: score2, status: st, m1: m1 === "" ? null : +m1, m2: m2 === "" ? null : +m2 }),
+        body: JSON.stringify({ matchId: m.id, s1: score1, s2: score2, status: st, m1: m1 === "" ? null : +m1, m2: m2 === "" ? null : +m2, durationSeconds: parseTime(dur) }),
       });
       const r = await res.json();
       if (r.ok) { setStatus(r.status); onSaved(m.id, r.status); } else onError(r.error || "Lỗi lưu");
@@ -286,11 +288,37 @@ function MatchEditor({ m, onSaved, onError }: { m: AdminMatch; onSaved: (id: str
           <option value="live">Đang đánh</option>
           <option value="done">Xong</option>
         </Select>
+        {isGroup && (
+          <label style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6" }} title="Thời gian trận đấu — tiêu chí phụ cuối khi đồng hạng. Nhập mm:ss (vd 32:10) hoặc số phút.">
+            ⏱
+            <input value={dur} onChange={(e) => setDur(e.target.value)} onBlur={() => void doSave(s1, s2, status)} placeholder="mm:ss"
+              style={{ width: 64, padding: "4px 6px", borderRadius: 6, background: "rgba(255,255,255,.05)", border: "1px solid #2c3470", color: "#9bd8ff", fontFamily: FONT_MONO, fontSize: 11, textAlign: "center", outline: "none" }} />
+          </label>
+        )}
         {busy && <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6", marginLeft: 4 }}>Đang lưu…</span>}
         {bestOf < 99 && <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: "#b9c3e6", marginLeft: "auto" }}>best of {bestOf}</span>}
       </div>
     </div>
   );
+}
+
+/** mm:ss → seconds. "32:10" → 1930; plain number → minutes ("32" → 1920). Blank → null. */
+function parseTime(s: string): number | null {
+  const t = s.trim();
+  if (!t) return null;
+  if (t.includes(":")) {
+    const [mm, ss] = t.split(":");
+    const sec = (parseInt(mm, 10) || 0) * 60 + (parseInt(ss, 10) || 0);
+    return sec > 0 ? sec : null;
+  }
+  const mins = parseFloat(t);
+  return Number.isFinite(mins) && mins > 0 ? Math.round(mins * 60) : null;
+}
+/** seconds → "mm:ss" (blank when none). */
+function fmtTime(sec: number | null | undefined): string {
+  if (!sec || sec <= 0) return "";
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 function stepBtnStyle(disabled: boolean): React.CSSProperties {

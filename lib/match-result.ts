@@ -18,7 +18,7 @@ async function setSlot(tx: TransactionSql<Record<string, never>>, matchId: strin
  */
 export async function saveMatchResult(
   matchId: string, s1: number, s2: number, status: MatchStatus,
-  m1: number | null = null, m2: number | null = null,
+  m1: number | null = null, m2: number | null = null, durationSeconds: number | null = null,
 ): Promise<MatchStatus> {
   let finalStatus: MatchStatus = status;
   await sql.begin(async (tx) => {
@@ -35,7 +35,7 @@ export async function saveMatchResult(
     }
     let winner: string | null = null;
     if (finalStatus === "done") winner = s1 > s2 ? m.player1_id : s2 > s1 ? m.player2_id : null;
-    await tx`update aoe.matches set player1_score=${s1}, player2_score=${s2}, player1_machine=${m1}, player2_machine=${m2}, status=${finalStatus}, winner_id=${winner} where id=${matchId}`;
+    await tx`update aoe.matches set player1_score=${s1}, player2_score=${s2}, player1_machine=${m1}, player2_machine=${m2}, duration_seconds=${durationSeconds}, status=${finalStatus}, winner_id=${winner} where id=${matchId}`;
     if (finalStatus === "done" && winner) {
       const loser = winner === m.player1_id ? m.player2_id : m.player1_id;
       if (m.next_match_id && m.next_match_slot) await setSlot(tx, m.next_match_id, m.next_match_slot, winner, null);
