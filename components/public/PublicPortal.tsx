@@ -265,8 +265,8 @@ function GroupsView({ round }: { round: Extract<RoundSnapshot, { type: "group" }
 
 function GroupCard({ g }: { g: GroupVM }) {
   const [open, setOpen] = useState(false); // match list collapsed by default
-  // Columns: # | player | advance-badge | Đ(points) | T(win) | B(loss) | [H(draw)] | +/-(diff)
-  const cols = `26px 1fr auto 34px 28px 28px ${g.showDraw ? "28px " : ""}40px`;
+  // Columns: # | player | advance-badge | Điểm | T(win) | B(loss) | [H(draw)] | HS(diff)
+  const cols = `26px 1fr auto 42px 26px 26px ${g.showDraw ? "26px " : ""}40px`;
   const numCell: React.CSSProperties = { fontFamily: FONT_MONO, fontSize: 13, textAlign: "center" };
   return (
     <div style={{ background: "rgba(255,255,255,.03)", border: "1px solid rgba(93,182,255,.16)", borderRadius: 14, padding: 18, animation: "cardIn .5s both" }}>
@@ -276,11 +276,11 @@ function GroupCard({ g }: { g: GroupVM }) {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: cols, gap: 8, padding: "0 10px 6px", fontFamily: FONT_MONO, fontSize: 10, color: "#b9c3e6", letterSpacing: 1 }}>
         <span>#</span><span>NGƯỜI CHƠI</span><span></span>
-        <span style={{ textAlign: "center", color: "#bfe2ff" }} title="Điểm (thắng +3)">Đ</span>
+        <span style={{ textAlign: "center", color: "#bfe2ff" }} title="Điểm (thắng +3)">Điểm</span>
         <span style={{ textAlign: "center" }} title="Thắng">T</span>
         <span style={{ textAlign: "center" }} title="Thua">B</span>
         {g.showDraw && <span style={{ textAlign: "center" }} title="Hòa">H</span>}
-        <span style={{ textAlign: "center" }} title="Hệ số (hiệu số trận)">+/-</span>
+        <span style={{ textAlign: "center" }} title="Hệ số = hiệu số trận thắng/thua">HS</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
         {g.rows.map((r) => (
