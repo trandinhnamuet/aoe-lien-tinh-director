@@ -170,7 +170,7 @@ export default function PublicPortal({ initial }: { initial: ClusterSnapshot }) 
           <div className="pub-pad" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", display: "flex", gap: 4, overflowX: "auto" }}>
             <Tab label="Tổng quan" active={route === "dashboard"} onClick={() => setRoute("dashboard")} />
             {snap.rounds.map((r) => (
-              <Tab key={r.id} label={r.name} active={route === r.id} onClick={() => setRoute(r.id)} />
+              <Tab key={r.id} label={r.name} active={route === r.id} onClick={() => setRoute(r.id)} tooltipContent={r.type === "group" ? <GroupFormatTooltipBody configText={r.configText} /> : undefined} />
             ))}
           </div>
         </header>
@@ -190,11 +190,19 @@ export default function PublicPortal({ initial }: { initial: ClusterSnapshot }) 
   );
 }
 
-function Tab({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+function Tab({ label, active, onClick, tooltipContent }: { label: string; active: boolean; onClick: () => void; tooltipContent?: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
   return (
-    <button onClick={onClick} style={{ background: "none", border: "none", cursor: "pointer", padding: "13px 16px", fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 14, fontWeight: active ? 600 : 400, color: active ? "#bfe2ff" : "#aab4d4", borderBottom: `2px solid ${active ? "#5db6ff" : "transparent"}`, whiteSpace: "nowrap" }}>
-      {label}
-    </button>
+    <div style={{ position: "relative" }} onMouseEnter={() => tooltipContent && setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button onClick={onClick} style={{ background: "none", border: "none", cursor: "pointer", padding: "13px 16px", fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 14, fontWeight: active ? 600 : 400, color: active ? "#bfe2ff" : "#aab4d4", borderBottom: `2px solid ${active ? "#5db6ff" : "transparent"}`, whiteSpace: "nowrap" }}>
+        {label}
+      </button>
+      {tooltipContent && open && (
+        <div style={{ position: "absolute", top: "100%", left: 0, zIndex: 50, width: 380, maxWidth: "88vw", background: "#0e1336", border: "1px solid rgba(93,182,255,.4)", borderRadius: 12, padding: "16px 18px", boxShadow: "0 18px 50px rgba(0,0,0,.55)", textAlign: "left" }}>
+          {tooltipContent}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -257,47 +265,33 @@ function Dashboard({ snap, flash, onOpenRound }: { snap: ClusterSnapshot; flash:
 
 function GroupsView({ round }: { round: Extract<RoundSnapshot, { type: "group" }> }) {
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-        <FormatInfo configText={round.configText} />
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 330px), 1fr))", gap: 18 }}>
-        {round.groups.map((g: GroupVM) => <GroupCard key={g.key} g={g} />)}
-      </div>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 330px), 1fr))", gap: 18 }}>
+      {round.groups.map((g: GroupVM) => <GroupCard key={g.key} g={g} />)}
     </div>
   );
 }
 
-/** (i) button — hover (or tap) to read the full group-stage format + ranking rules. */
-function FormatInfo({ configText }: { configText: string }) {
-  const [open, setOpen] = useState(false);
+function GroupFormatTooltipBody({ configText }: { configText: string }) {
   const head: React.CSSProperties = { color: "#9bd8ff", fontWeight: 700 };
   const para: React.CSSProperties = { marginBottom: 8 };
   return (
-    <div style={{ position: "relative", display: "inline-flex" }}
-      onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-      <button onClick={() => setOpen((v) => !v)} aria-label="Thông tin thể thức vòng bảng"
-        style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid rgba(93,182,255,.5)", background: "rgba(93,182,255,.12)", color: "#9bd8ff", fontFamily: FONT_SAIRA, fontWeight: 800, fontStyle: "italic", fontSize: 14, lineHeight: 1, cursor: "pointer" }}>i</button>
-      {open && (
-        <div style={{ position: "absolute", top: 32, left: 0, zIndex: 50, width: 380, maxWidth: "88vw", background: "#0e1336", border: "1px solid rgba(93,182,255,.4)", borderRadius: 12, padding: "16px 18px", boxShadow: "0 18px 50px rgba(0,0,0,.55)", textAlign: "left" }}>
-          <div style={{ fontFamily: FONT_SAIRA, fontWeight: 800, fontStyle: "italic", fontSize: 18, textTransform: "uppercase", marginBottom: 10 }}>Thể thức vòng bảng</div>
-          <div style={{ fontSize: 13, lineHeight: 1.6, color: "#dbe4ff" }}>
-            <div style={para}><span style={head}>Cách đấu:</span> Chia thành các bảng đấu vòng tròn (ai cũng gặp mọi người trong bảng). Mỗi cặp đánh kiểu &quot;chạm&quot; — ai đạt đủ số ván trước thì thắng, nên <b>luôn có người thắng, không có hòa</b>. Thắng một cặp được <b>+3 điểm</b>.</div>
-            <div style={para}><span style={head}>Chia bảng:</span> Số bảng là lũy thừa của 2 (1, 2, 4, 8…), mỗi bảng 3–6 người, chia đều sao cho bảng đông nhất và ít nhất chênh nhau không quá 1 người. Bốc thăm ngẫu nhiên.</div>
-            <div style={para}><span style={head}>Đi tiếp:</span> Số game thủ đứng đầu mỗi bảng (theo cấu hình) vào vòng sau — gắn nhãn <b>ĐI TIẾP</b>.</div>
-            <div style={{ marginBottom: 4 }}><span style={head}>Thứ tự tiêu chí xét hạng</span>:</div>
-            <ol style={{ margin: 0, paddingLeft: 18 }}>
-              <li><b>Điểm</b> (Đ) — thắng +3</li>
-              <li><b>Hiệu số</b> toàn bảng (HS = tổng ván thắng − thua)</li>
-              <li><b>Đối đầu trực tiếp</b> giữa những người đang đồng hạng (số trận thắng nội bộ)</li>
-              <li><b>Hiệu số ván</b> trong chính các trận đối đầu nội bộ đó</li>
-              <li><b>Tổng thời gian các ván thắng</b> — ít hơn xếp trên (nếu có)</li>
-            </ol>
-            <div style={{ marginTop: 10, fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6" }}>Cấu hình vòng này: {configText}</div>
-          </div>
-        </div>
-      )}
-    </div>
+    <>
+      <div style={{ fontFamily: FONT_SAIRA, fontWeight: 800, fontStyle: "italic", fontSize: 18, textTransform: "uppercase", marginBottom: 10 }}>Thể thức vòng bảng</div>
+      <div style={{ fontSize: 13, lineHeight: 1.6, color: "#dbe4ff" }}>
+        <div style={para}><span style={head}>Cách đấu:</span> Chia thành các bảng đấu vòng tròn (ai cũng gặp mọi người trong bảng). Mỗi cặp đánh kiểu &quot;chạm&quot; — ai đạt đủ số ván trước thì thắng, nên <b>luôn có người thắng, không có hòa</b>. Thắng một cặp được <b>+3 điểm</b>.</div>
+        <div style={para}><span style={head}>Chia bảng:</span> Số bảng là lũy thừa của 2 (1, 2, 4, 8…), mỗi bảng 3–6 người, chia đều sao cho bảng đông nhất và ít nhất chênh nhau không quá 1 người. Bốc thăm ngẫu nhiên.</div>
+        <div style={para}><span style={head}>Đi tiếp:</span> Số game thủ đứng đầu mỗi bảng (theo cấu hình) vào vòng sau — gắn nhãn <b>ĐI TIẾP</b>.</div>
+        <div style={{ marginBottom: 4 }}><span style={head}>Thứ tự tiêu chí xét hạng</span>:</div>
+        <ol style={{ margin: 0, paddingLeft: 18 }}>
+          <li><b>Điểm</b> (Đ) — thắng +3</li>
+          <li><b>Hiệu số</b> toàn bảng (HS = tổng ván thắng − thua)</li>
+          <li><b>Đối đầu trực tiếp</b> giữa những người đang đồng hạng (số trận thắng nội bộ)</li>
+          <li><b>Hiệu số ván</b> trong chính các trận đối đầu nội bộ đó</li>
+          <li><b>Tổng thời gian các ván thắng</b> — ít hơn xếp trên (nếu có)</li>
+        </ol>
+        <div style={{ marginTop: 10, fontFamily: FONT_MONO, fontSize: 11, color: "#b9c3e6" }}>Cấu hình vòng này: {configText}</div>
+      </div>
+    </>
   );
 }
 
